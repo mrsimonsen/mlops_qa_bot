@@ -5,14 +5,19 @@ import requests
 import scraper.scraper as scraper
 from scraper.config import OUTPUT_DIR
 
-@pytest.mark.parametrize("test_id, domain_input, expected_output", [
+test_cases = [
 	("standard domain", "docs.zenml.io", "docs_zenml_io.txt"),
 	("special characters", "!@#$%^&*-=+:/<>,;?", ".txt"),
 	("empty string", "", ".txt"),
 	("all numbers", "123.45.67.89", "123_45_67_89.txt"),
 	("multiple dots", "test..domain.org", "test__domain_org.txt"),
 	("no dots", "localhost", "localhost.txt")
-])
+]
+@pytest.mark.parametrize(
+	"test_id, domain_input, expected_output",
+	test_cases,
+	ids=[cases[0] for cases in test_cases]
+)
 def test_sanitize_filename(test_id, domain_input, expected_output):
 	"""
 	Tests the sanitize_filename function with various inputs.
@@ -21,13 +26,18 @@ def test_sanitize_filename(test_id, domain_input, expected_output):
 	"""
 	assert scraper.sanitize_filename(domain_input) == expected_output
 
-@pytest.mark.parametrize("test_id, url, base_domain, expected", [
+test_cases = [
 	("positive", "https://docs.example.com/path/page", "docs.example.com", True),
 	("different subdomain", "https://api.example.com/path/page", "docs.example.com", False),
 	("different domains", "https://another-site.com", "docs.example.com", False),
 	("relative url", "/path/page", "docs.example.com", False),
 	("url with www vs base_domain", "https://www.example.com", "example.com", False)
-])
+]
+@pytest.mark.parametrize(
+	"test_id, url, base_domain, expected",
+	test_cases,
+	ids=[cases[0] for cases in test_cases]
+)
 def test_is_valid_url(test_id, url, base_domain, expected):
 	"""
 	Tests the URL validation logic with various cases.
