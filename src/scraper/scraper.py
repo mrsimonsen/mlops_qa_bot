@@ -42,11 +42,52 @@ def sanitize_filename(domain: str) -> str:
 	return f'{sanitized}.txt'
 
 
+def is_valid_url(full_url: str, base_domain: str) -> bool:
+	return False
+
 # --- Main Logic ---
 
 
 def scrape_page(url: str, session: requests.Session, base_domain: str) -> tuple[str, set[str]]:
-	return '', set()
+	"""
+	Scrapes a single page, extracts the main text content, and finds all valid links.
+
+	ARGS:
+		url: str, the page to be scraped
+		session: request.Session, session object for making HTML requests
+		base_domain: str, the base domain to keep from leaving the site
+	RETURNS:
+		text: str, the text content of the scraped page
+		links: set, the links found from the page that are in the base_domain
+	"""
+	try:
+		response = session.get(url, timeout=10)
+		response.raise_for_status()
+	
+		#skip this page if no text
+		if 'text/html' not in response.headers.get('Content Type', ''):
+			return '', set()
+		
+		soup = BeautifulSoup(response.content, 'html.parser')
+		
+		main_content = soup.find('main') or soup.find('article') or soup.find('div', role='main')
+		if main_content:
+			text = main_content.get_text(separator='\n', strip=True)
+		else:
+			text = soup.body.get_text(separator='\n', strip=True)
+
+		links = set()
+		for a_tag in soup.find_all('a', href=True):
+			href = a_tag['href']
+			full_url = urljoin(url, href)
+			full_url = full_url.split('#')[0].split('?')[0]
+
+			if is_valid_url(full_url, base_domain):
+				links.add(full_url)
+		return text, links
+	except requests.exceptions.RequestException as e:
+		logging.error(f'Error scraping {url}: {e}')
+		return '', set()
 
 def crawl_site(base_url: str, session: requests.Session, output_file: str) -> None:
 	"""
@@ -85,7 +126,7 @@ def crawl_site(base_url: str, session: requests.Session, output_file: str) -> No
 		
 		to_visit.update(new_links - visited)
 		time.sleep(REQUEST_DELAY)
-		
+
 	logging.info(f"Finished crawling {base_url}. Visited {len(visited)} pages.")
 
 
