@@ -22,3 +22,22 @@ def clean_text(text: str) -> str:
 	# remove long non-alphanumeric sequences
 	text = re.sub(r'[^a-zA-Z0-9\n\s]{4,}', '', text)
 	return text
+
+def chunk_text(text: str) -> List[str]:
+	"""
+	Splits the text into overlapping chunks based on the configuration.
+	
+	ARGS:
+		text: str, the input text to be chunked.
+	RETURNS:
+		chunks: list[str], a list of text chunks.
+	"""
+	if not text:
+		return []
+	chunks = []
+	start_index=0
+	while start_index < len(text):
+		end_index = start_index + CHUNK_SIZE
+		chunks.append(text[start_index:end_index])
+		start_index += CHUNK_SIZE - CHUNK_OVERLAP
+	return chunks
