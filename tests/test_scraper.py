@@ -3,6 +3,7 @@ from unittest.mock import patch, mock_open, MagicMock, ANY, call
 import requests
 
 import scraper.scraper as scraper
+from scraper.config import OUTPUT_DIR
 
 @patch('os.path.exists', return_value=True)
 @patch(
@@ -166,3 +167,30 @@ def test_crawl_site(mock_file, mock_scrape_page, mock_sleep, caplog):
 	handle.write.assert_any_call(f"Text from page 1.")
 	handle.write.assert_any_call(f"\n\n--- Page: {page2_url} ---\n\n")
 	handle.write.assert_any_call(f"Text from page 2.")
+
+@patch('scraper.scraper.crawl_site')
+@patch('requests.Session')
+@patch('os.makedirs')
+@patch('scraper.scraper.load_base_url')
+def test_main_flow(mock_load_urls, mock_makedirs, mock_session, mock_crawl_site):
+	"""
+	Tests the main function's orchestration logic.
+	- Mocks all helper functions to ensure 'main' calls them correctly.
+	- 'load_base_url' is mocked to return a list of URLs to process.
+	- Verifies that 'crawl_site' is called once for each URL with the correct
+	 parameters.
+	"""
+	urls = ['https://site1.com', 'https://site2.org']
+	mock_load_urls.return_value = urls
+
+	scraper.main()
+
+	mock_load_urls.assert_called_once()
+	mock_makedirs.assert_called_once_with(OUTPUT_DIR, exist_ok=True)
+
+	assert mock_crawl_site.call_count == 2
+	expected_calls = [
+		call("https://site1.com", ANY, f'{OUTPUT_DIR}/site1_com.txt'),
+		call("https://site2.org", ANY, f'{OUTPUT_DIR}/site2_org.txt')
+	]
+	mock_crawl_site.assert_has_calls(expected_calls, any_order=False)
