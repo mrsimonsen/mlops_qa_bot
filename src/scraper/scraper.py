@@ -42,8 +42,18 @@ def sanitize_filename(domain: str) -> str:
 	return f'{sanitized}.txt'
 
 
-def is_valid_url(full_url: str, base_domain: str) -> bool:
-	return False
+def is_valid_url(url: str, base_domain: str) -> bool:
+	"""
+	Checks if a URL is valid and belongs to the same domain as the base URL.
+
+	ARGS:
+		url: str, the URL to check
+		base_domain: str, the base URL to establish the domain
+	RETURNS:
+		is_valid: bool, True if the full URL is valid and a part of the base_domain
+	"""
+	parsed_url = urlparse(url)
+	return bool(parsed_url.scheme) and bool(parsed_url.netloc) and parsed_url.netloc == base_domain
 
 # --- Main Logic ---
 
