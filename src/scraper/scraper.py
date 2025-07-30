@@ -75,7 +75,7 @@ def scrape_page(url: str, session: requests.Session, base_domain: str) -> tuple[
 		response.raise_for_status()
 	
 		#skip this page if no text
-		if 'text/html' not in response.headers.get('Content Type', ''):
+		if 'text/html' not in response.headers.get('Content-Type', ''):
 			return '', set()
 		
 		soup = BeautifulSoup(response.content, 'html.parser')

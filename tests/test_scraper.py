@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import patch, mock_open, MagicMock, call
+import requests
 
 import scraper.scraper as scraper
 
@@ -76,3 +77,60 @@ def test_is_valid_url(url, base_domain, expected):
 	efficiently without needing mocks.
 	"""
 	assert scraper.is_valid_url(url, base_domain) == expected
+
+@patch('requests.Session')
+def test_scrape_page_success(mock_session):
+	"""
+	Tests successful page scraping.
+	- Mocks the requests.Session to return a fake HTML response.
+	- Verifies that text is extracted correctly from the <main> tag.
+	- Verifies that only valid, on-domain links are returned.
+	"""
+	base_url = "https://test.com"
+	base_domain = "test.com"
+	html_content= """
+<html>
+	<body>
+		<header>Some awesome header</header>
+		<main>
+			<h1>Main Title</h1>
+			<p>This is the main content.</p>
+			<a href="/page2">Internal Link</a>
+			<a href="https://test.com/page3#section">Internal Link with fragment</a>
+			<a href="https://external.com">External Link</a>
+		</main>
+	</body>
+</html>
+"""
+
+	mock_response = MagicMock()
+	mock_response.content = html_content.encode('utf-8')
+	mock_response.headers = {'Content-Type': 'text/html'}
+	mock_response.raise_for_status.return_value = None
+
+	mock_session.get.return_value = mock_response
+	
+	text, links = scraper.scrape_page(base_url, mock_session, base_domain)
+
+	expected_text = "Main Title\nThis is the main content.\nInternal Link\nInternal Link with fragment\nExternal Link"
+	expected_links = {"https://test.com/page2", "https://test.com/page3"}
+
+	assert text.strip() == expected_text
+	assert links == expected_links
+	mock_session.get.assert_called_once_with(base_url, timeout=10)
+
+@patch('requests.Session')
+def test_scrape_page_request_error(mock_session, caplog):
+	"""
+	Tests how scrape_page handles a network error.
+	- Mocks the session's get method to raise a RequestException.
+	- Verifies that the function returns empty values and logs an error.
+	"""
+	url = "https://test.com"
+	mock_session.get.side_effect = requests.exceptions.RequestException("Test Error")
+
+	text, links = scraper.scrape_page(url, mock_session, "test.com")
+
+	assert text == ""
+	assert links == set()
+	assert f'Error scraping {url}: Test Error' in caplog.text
