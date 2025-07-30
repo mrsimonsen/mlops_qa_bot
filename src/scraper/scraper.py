@@ -44,6 +44,51 @@ def sanitize_filename(domain: str) -> str:
 
 # --- Main Logic ---
 
+
+def scrape_page(url: str, session: requests.Session, base_domain: str) -> tuple[str, set[str]]:
+	return '', set()
+
+def crawl_site(base_url: str, session: requests.Session, output_file: str) -> None:
+	"""
+	Orchestrates the scraping process for a single base URL, saving to a specific file.
+	
+	ARGS:
+		base_url: str, the base URL for the site to be scraped
+		session: requests.Session, session object for making HTML requests
+		output_file: str, a filepath to save the scrapped data
+	"""
+	base_domain = urlparse(base_url).netloc
+	to_visit = {base_url}
+	visited = set()
+
+	logging.info(f"Starting crawl for: {base_url}/nOutput saved to: {output_file}")
+
+	#clear output_file before starting crawl
+	with open(output_file, 'w') as f:
+		f.write(f"--- Scraped content from {base_url} ---\n")
+	
+	while to_visit:
+		current_url = to_visit.pop()
+		# don't scrape the same page twice
+		if current_url in visited:
+			continue
+		
+		logging.info(f"\tScraping: {current_url}")
+		visited.add(current_url)
+
+		text, new_links = scrape_page(current_url, session, base_domain)
+
+		if text:
+			with open(output_file, 'a') as f:
+				f.write(f"\n\n--- Page: {current_url} ---\n\n")
+				f.write(text)
+		
+		to_visit.update(new_links - visited)
+		time.sleep(REQUEST_DELAY)
+		
+	logging.info(f"Finished crawling {base_url}. Visited {len(visited)} pages.")
+
+
 def main():
 	"""
 	Main function to load URLs and orchestrate the scraping for all sites.
@@ -55,7 +100,7 @@ def main():
 		return
 	logging.info("base urls loaded")
 		#create output directory
-	os.makedirs(OUTPUT_DIR, exists_ok=True)
+	os.makedirs(OUTPUT_DIR, exist_ok=True)
 	logging.info("output directory is ready")
 	
 	#create session
@@ -67,6 +112,9 @@ def main():
 	for url in base_urls:
 		domain = urlparse(url).netloc
 		output_filename = sanitize_filename(domain)
+		output_filepath = os.path.join(OUTPUT_DIR, output_filename)
 
+		crawl_site(url, session, output_filepath)
+	logging.info(f"All scraping tasks complete and saved in '{OUTPUT_DIR}'")
 if __name__ == '__main__':
 	main()
