@@ -34,3 +34,26 @@ def test_load_base_url_failure(mock_exists, caplog):
 	assert result == []
 	mock_exists.assert_called_once_with(non_existent_file)
 	assert f"Error: URL file not found at '{non_existent_file}'" in caplog.text
+
+@pytest.mark.parametrize("domain_input, expected_output", [
+	#Test case: standard domain
+	("docs.zenml.io", "docs_zenml_io.txt"),
+	#Test case: special characters
+	("!@#$%^&*-=+:/<>,;?", ".txt"),
+	#Test case: empty string
+	("", ".txt"),
+	#Test case: all numbers
+	("123.45.67.89", "123_45_67_89.txt"),
+	#Test case: multiple dots
+	("test..domain.org", "test__domain_org.txt"),
+	#Test case: no dots
+	("localhost", "localhost.txt")
+])
+def test_sanitize_filename(domain_input, expected_output):
+	"""
+	Tests the sanitize_filename function with various inputs.
+	Uses pytest.mark.parameterize to run the same test function
+	with different inputs and expected outputs.
+	"""
+	assert scraper.sanitize_filename(domain_input) == expected_output
+
