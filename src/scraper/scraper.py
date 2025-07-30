@@ -5,26 +5,10 @@ from urllib.parse import urljoin, urlparse
 import time
 import re
 import logging
+from typing import List, Set, Tuple, Annotated
 from .config import OUTPUT_DIR, REQUEST_DELAY
 
 # --- Helper Functions ---
-
-def load_base_url(filepath: str) -> list[str]:
-	"""
-	Loads a list of base URLs from a text file.
-
-	ARGS:
-		filepath: str, location of text file containing the list of URLS
-	RETURNS:
-		urls: list, list of base URL strings
-	"""
-	if not os.path.exists(filepath):
-		logging.error(f"Error: URL file not found at '{filepath}'")
-		return []
-	with open(filepath, 'r') as f:
-		urls = [line.strip() for line in f.readlines()]
-	return urls
-
 def sanitize_filename(domain: str) -> str:
 	"""
 	Creates a safe and clean filename from a domain name.
@@ -58,7 +42,9 @@ def is_valid_url(url: str, base_domain: str) -> bool:
 # --- Main Logic ---
 
 
-def scrape_page(url: str, session: requests.Session, base_domain: str) -> tuple[str, set[str]]:
+def scrape_page(
+    url: str, session: requests.Session, base_domain: str
+) -> Annotated[Tuple[str, Set[str]], "page_text_and_links"]:
 	"""
 	Scrapes a single page, extracts the main text content, and finds all valid links.
 
@@ -143,7 +129,7 @@ def crawl_site(base_url: str, session: requests.Session, output_file: str) -> No
 	logging.info(f"Finished crawling {base_url}. Visited {len(visited)} pages.")
 
 
-def scrape_single_url(base_url: str) -> str:
+def scrape_single_url(base_url: str) -> Annotated[str, "scraped_file_path"]:
 	"""
 	Main entry point to scrape a single base URL and save it to a file.
 	
