@@ -1,0 +1,12 @@
+https://docs.zenml.io/
+https://mlflow.org/docs/latest/index.html
+https://docs.docker.com/
+https://kubernetes.io/docs/home/
+https://registry.terraform.io/providers/hashicorp/aws/latest/docs
+https://fastapi.tiangolo.com/
+https://docs.github.com/en/actions
+https://docs.aws.amazon.com/ec2/index.html
+https://dvc.org/doc
+https://git-scm.com/doc
+https://github.com/ollama/ollama/blob/main/docs/README.md
+https://docs.trychroma.com/
