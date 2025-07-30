@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, mock_open, MagicMock, call
+from unittest.mock import patch, mock_open, MagicMock, ANY, call
 import requests
 
 import scraper.scraper as scraper
@@ -134,3 +134,35 @@ def test_scrape_page_request_error(mock_session, caplog):
 	assert text == ""
 	assert links == set()
 	assert f'Error scraping {url}: Test Error' in caplog.text
+
+@patch('time.sleep', return_value=None)
+@patch('scraper.scraper.scrape_page')
+@patch('builtins.open', new_callable=mock_open)
+def test_crawl_site(mock_file, mock_scrape_page, mock_sleep, caplog):
+	"""
+	Tests the complete crawling process for a single site.
+	- Mocks 'scrape_page' to simulate discovering new pages.
+	- Mocks 'builtin.open' to check file writing without touching disk.
+	- Mocks 'time.sleep' to prevent delays.
+	- Simulates a two-page crawl and verifies the calls and file content.
+	"""
+	base_url = "https://crawler.test"
+	page2_url = "https://crawler.test/page2"
+
+	mock_scrape_page.side_effect = [
+		("Text from page 1.", {page2_url}),
+		("Text from page 2.", set())
+	]
+
+	scraper.crawl_site(base_url, requests.Session(), "dummy_output.txt")
+
+	assert mock_scrape_page.call_count == 2
+	mock_scrape_page.assert_any_call(base_url, ANY, "crawler.test")
+	mock_scrape_page.assert_any_call(page2_url, ANY, "crawler.test")
+
+	handle = mock_file()
+	handle.write.assert_any_call(f"--- Scraped content from {base_url} ---\n")
+	handle.write.assert_any_call(f"\n\n--- Page: {base_url} ---\n\n")
+	handle.write.assert_any_call(f"Text from page 1.")
+	handle.write.assert_any_call(f"\n\n--- Page: {page2_url} ---\n\n")
+	handle.write.assert_any_call(f"Text from page 2.")
