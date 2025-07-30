@@ -5,7 +5,7 @@ from urllib.parse import urljoin, urlparse
 import time
 import re
 import logging
-from ..config import URLS_FILE, OUTPUT_DIR, REQUEST_DELAY
+from .config import URLS_FILE, OUTPUT_DIR, REQUEST_DELAY
 
 # --- Helper Functions ---
 
