@@ -1,3 +1,4 @@
+import argparse
 import os
 import requests
 from bs4 import BeautifulSoup
@@ -144,6 +145,21 @@ def main():
 	"""
 	Main function to load URLs and orchestrate the scraping for all sites.
 	"""
+	#set logging arguments
+	parser = argparse.ArgumentParser(description='A web scraper for MLOps documentation.')
+	parser.add_argument(
+		'--log-level',
+		default='INFO',
+		choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+		help='Set the logging level (default: INFO)'
+	)
+	args = parser.parse_args()
+
+	logging.basicConfig(
+		level=getattr(logging, args.log_level.upper()),
+		format='%(asctime)s - %(levelname)s - %(message)s'
+	)
+
 	#load list of urls
 	base_urls = load_base_url(URLS_FILE)
 	if not base_urls:
