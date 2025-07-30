@@ -84,8 +84,11 @@ def scrape_page(url: str, session: requests.Session, base_domain: str) -> tuple[
 		main_content = soup.find('main') or soup.find('article') or soup.find('div', role='main')
 		if main_content:
 			text = main_content.get_text(separator='\n', strip=True)
+		elif soup.body:
+			text = soup.body.get_text(separator='\n', strip=True)
 		else:
-			text = soup.body.get_text(separator='\n', strip=True) # type: ignore
+			logging.warning(f"No body tag found for {url}. Skipping.")
+			return '', set()
 
 		links = set()
 		for a_tag in soup.find_all('a', href=True):
