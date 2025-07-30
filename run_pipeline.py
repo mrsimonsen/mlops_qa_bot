@@ -7,7 +7,7 @@ from src.scraper.scraper import scrape_single_url
 URLS_FILE = "urls_to_scrape.txt"
 
 # --- Load URLs to Scrape ---
-def load_base_urls(filepath: str) -> List[str]:
+def load_base_urls(filepath: str) -> Annotated[List[str], "base_urls_list"]:
 	"""Loads a list of base URLs from a text file."""
 	try:
 		with open(filepath, 'r') as f:

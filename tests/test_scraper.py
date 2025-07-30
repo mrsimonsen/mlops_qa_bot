@@ -5,21 +5,15 @@ import requests
 import scraper.scraper as scraper
 from scraper.config import OUTPUT_DIR
 
-@pytest.mark.parametrize("domain_input, expected_output", [
-	#Test case: standard domain
-	("docs.zenml.io", "docs_zenml_io.txt"),
-	#Test case: special characters
-	("!@#$%^&*-=+:/<>,;?", ".txt"),
-	#Test case: empty string
-	("", ".txt"),
-	#Test case: all numbers
-	("123.45.67.89", "123_45_67_89.txt"),
-	#Test case: multiple dots
-	("test..domain.org", "test__domain_org.txt"),
-	#Test case: no dots
-	("localhost", "localhost.txt")
+@pytest.mark.parametrize("test_id, domain_input, expected_output", [
+	("standard domain", "docs.zenml.io", "docs_zenml_io.txt"),
+	("special characters", "!@#$%^&*-=+:/<>,;?", ".txt"),
+	("empty string", "", ".txt"),
+	("all numbers", "123.45.67.89", "123_45_67_89.txt"),
+	("multiple dots", "test..domain.org", "test__domain_org.txt"),
+	("no dots", "localhost", "localhost.txt")
 ])
-def test_sanitize_filename(domain_input, expected_output):
+def test_sanitize_filename(test_id, domain_input, expected_output):
 	"""
 	Tests the sanitize_filename function with various inputs.
 	Uses pytest.mark.parameterize to run the same test function
@@ -27,19 +21,14 @@ def test_sanitize_filename(domain_input, expected_output):
 	"""
 	assert scraper.sanitize_filename(domain_input) == expected_output
 
-@pytest.mark.parametrize("url, base_domain, expected", [
-	#Test case: positive
-	("https://docs.example.com/path/page", "docs.example.com", True),
-	#Test case different subdomain
-	("https://api.example.com/path/page", "docs.example.com", False),
-	#Test case: different domains
-	("https://another-site.com", "docs.example.com", False),
-	#Test case: relative url
-	("/path/page", "docs.example.com", False),
-	#Test case: edge - url with www vs base_domain
-	("https://www.example.com", "example.com", False)
+@pytest.mark.parametrize("test_id, url, base_domain, expected", [
+	("positive", "https://docs.example.com/path/page", "docs.example.com", True),
+	("different subdomain", "https://api.example.com/path/page", "docs.example.com", False),
+	("different domains", "https://another-site.com", "docs.example.com", False),
+	("relative url", "/path/page", "docs.example.com", False),
+	("url with www vs base_domain", "https://www.example.com", "example.com", False)
 ])
-def test_is_valid_url(url, base_domain, expected):
+def test_is_valid_url(test_id, url, base_domain, expected):
 	"""
 	Tests the URL validation logic with various cases.
 	This test uses pytest.mark.parameterize to check multiple scenarios
