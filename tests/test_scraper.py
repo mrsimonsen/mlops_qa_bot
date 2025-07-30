@@ -171,26 +171,33 @@ def test_crawl_site(mock_file, mock_scrape_page, mock_sleep, caplog):
 @patch('scraper.scraper.crawl_site')
 @patch('requests.Session')
 @patch('os.makedirs')
-@patch('scraper.scraper.load_base_url')
-def test_main_flow(mock_load_urls, mock_makedirs, mock_session, mock_crawl_site):
+def test_scrape_single_url(mock_makedirs, mock_session_constructor, mock_crawl_site):
 	"""
-	Tests the main function's orchestration logic.
-	- Mocks all helper functions to ensure 'main' calls them correctly.
-	- 'load_base_url' is mocked to return a list of URLs to process.
-	- Verifies that 'crawl_site' is called once for each URL with the correct
-	 parameters.
+	Tests the main entry point for scraping a single URL.
+	- Mocks dependencies to ensure they are called correctly.
+	- Verifies that craw_site is called with the expected URL and file path.
 	"""
-	urls = ['https://site1.com', 'https://site2.org']
-	mock_load_urls.return_value = urls
+	#set up
+	base_url = "https://docs.test.com/some/path"
+	expected_output_path = f'{OUTPUT_DIR}/docs_test_com.txt'
+	
+	mock_session_instance = MagicMock()
+	mock_session_constructor.return_value = mock_session_instance
 
-	scraper.main()
+	# execute
+	result_path = scraper.scrape_single_url(base_url)
 
-	mock_load_urls.assert_called_once()
+	# assert
+	#verify output directory creation
 	mock_makedirs.assert_called_once_with(OUTPUT_DIR, exist_ok=True)
-
-	assert mock_crawl_site.call_count == 2
-	expected_calls = [
-		call("https://site1.com", ANY, f'{OUTPUT_DIR}/site1_com.txt'),
-		call("https://site2.org", ANY, f'{OUTPUT_DIR}/site2_org.txt')
-	]
-	mock_crawl_site.assert_has_calls(expected_calls, any_order=False)
+	# verify session was created and headers updated
+	mock_session_constructor.assert_called_once()
+	mock_session_instance.headers.update.assert_called_once()
+	#verify that crawl_site() was called with correct args
+	mock_crawl_site.assert_called_once_with(
+		base_url,
+		mock_session_instance,
+		expected_output_path
+	)
+	#verify function returns correct output path
+	assert result_path == expected_output_path
