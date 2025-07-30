@@ -84,12 +84,12 @@ def scrape_page(url: str, session: requests.Session, base_domain: str) -> tuple[
 		if main_content:
 			text = main_content.get_text(separator='\n', strip=True)
 		else:
-			text = soup.body.get_text(separator='\n', strip=True)
+			text = soup.body.get_text(separator='\n', strip=True) # type: ignore
 
 		links = set()
 		for a_tag in soup.find_all('a', href=True):
-			href = a_tag['href']
-			full_url = urljoin(url, href)
+			href = a_tag['href'] # type: ignore
+			full_url = urljoin(url, href) # type: ignore
 			full_url = full_url.split('#')[0].split('?')[0]
 
 			if is_valid_url(full_url, base_domain):
