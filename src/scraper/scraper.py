@@ -144,7 +144,7 @@ def crawl_site(base_url: str, session: requests.Session, output_file: str) -> No
 	logging.info(f"Finished crawling {base_url}. Visited {len(visited)} pages.")
 
 
-def main():
+def main() -> str:
 	"""
 	Main function to load URLs and orchestrate the scraping for all sites.
 	"""
@@ -167,7 +167,7 @@ def main():
 	base_urls = load_base_url(URLS_FILE)
 	if not base_urls:
 		logging.error(f"No URLs to scrape. Please create '{URLS_FILE}' and add URLs to it.")
-		return
+		return ''
 	logging.info("base urls loaded")
 		#create output directory
 	os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -186,5 +186,6 @@ def main():
 
 		crawl_site(url, session, output_filepath)
 	logging.info(f"All scraping tasks complete and saved in '{OUTPUT_DIR}'")
+	return OUTPUT_DIR
 if __name__ == '__main__':
 	main()

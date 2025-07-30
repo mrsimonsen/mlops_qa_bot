@@ -219,3 +219,4 @@ processed_data/
 #MLflow files
 mlruns/
 mlflow.db
+/scrapped_data
