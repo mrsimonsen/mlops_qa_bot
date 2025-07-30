@@ -1,4 +1,3 @@
-import argparse
 import os
 import requests
 from bs4 import BeautifulSoup
@@ -6,7 +5,7 @@ from urllib.parse import urljoin, urlparse
 import time
 import re
 import logging
-from .config import URLS_FILE, OUTPUT_DIR, REQUEST_DELAY
+from .config import OUTPUT_DIR, REQUEST_DELAY
 
 # --- Helper Functions ---
 
@@ -144,48 +143,23 @@ def crawl_site(base_url: str, session: requests.Session, output_file: str) -> No
 	logging.info(f"Finished crawling {base_url}. Visited {len(visited)} pages.")
 
 
-def main() -> str:
+def scrape_single_url(base_url: str) -> str:
 	"""
-	Main function to load URLs and orchestrate the scraping for all sites.
-	"""
-	#set logging arguments
-	parser = argparse.ArgumentParser(description='A web scraper for MLOps documentation.')
-	parser.add_argument(
-		'--log-level',
-		default='INFO',
-		choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
-		help='Set the logging level (default: INFO)'
-	)
-	args = parser.parse_args()
-
-	logging.basicConfig(
-		level=getattr(logging, args.log_level.upper()),
-		format='%(asctime)s - %(levelname)s - %(message)s'
-	)
-
-	#load list of urls
-	base_urls = load_base_url(URLS_FILE)
-	if not base_urls:
-		logging.error(f"No URLs to scrape. Please create '{URLS_FILE}' and add URLs to it.")
-		return ''
-	logging.info("base urls loaded")
-		#create output directory
-	os.makedirs(OUTPUT_DIR, exist_ok=True)
-	logging.info("output directory is ready")
+	Main entry point to scrape a single base URL and save it to a file.
 	
-	#create session
+	ARGS:
+		base_url: str, the URL to scrape and crawl.
+	RETURNS:
+		output_filepath: str, the path to the text file the contains the scraped
+		  content.
+	"""
+	os.makedirs(OUTPUT_DIR, exist_ok=True)
 	session = requests.Session()
 	session.headers.update( {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
-	logging.info("session created")
 
-	#Crawl each site from list and save in own file
-	for url in base_urls:
-		domain = urlparse(url).netloc
-		output_filename = sanitize_filename(domain)
-		output_filepath = os.path.join(OUTPUT_DIR, output_filename)
+	domain = urlparse(base_url).netloc
+	output_filename = sanitize_filename(domain)
+	output_filepath = os.path.join(OUTPUT_DIR, output_filename)
 
-		crawl_site(url, session, output_filepath)
-	logging.info(f"All scraping tasks complete and saved in '{OUTPUT_DIR}'")
-	return OUTPUT_DIR
-if __name__ == '__main__':
-	main()
+	crawl_site(base_url, session, output_filepath)
+	return output_filepath
