@@ -64,3 +64,67 @@ def test_chunk_text(monkeypatch, test_id, input_text, expected_output):
 	actual_output = parser.chunk_text(input_text)
 
 	assert actual_output == expected_output
+
+test_cases = [
+	(
+		"with header",
+		"--- Scraped content from ...\n---\n\nThis is the actual content.",
+		"This is the actual content.",
+		["This is", "the actual", "content"]
+	),
+	(
+		"no header",
+		"No header here, just raw content.",
+		"No header here, just raw content.",
+		["No header", "here just", "raw content"]
+	)
+]
+@pytest.mark.parametrize(
+		"test_id, file_content, cleaned_input, expected_chunks",
+		test_cases,
+		ids=[case[0] for case in test_cases]
+)
+@patch('parser.parser.chunk_text')
+@patch('parser.parser.clean_text')
+@patch('parser.parser.logging')
+def test_process_and_chunk_file_success(
+	mock_logging,
+	mock_clean_text,
+	mock_chunk_text,
+	test_id,
+	file_content,
+	cleaned_input,
+	expected_chunks):
+	"""
+	Tests successful processing of a file, both with and without a header.
+	"""
+	test_filepath = "dummy/path/file.txt"
+	with patch('parser.parser.open', mock_open(read_data=file_content)) as mock_file:
+		mock_clean_text.return_value = cleaned_input
+		mock_chunk_text.return_value = expected_chunks
+
+		result_chunks = parser.process_and_chunk_file(test_filepath)
+
+		mock_file.assert_called_once_with(test_filepath, 'r')
+		mock_clean_text.assert_called_once_with(cleaned_input)
+		mock_chunk_text.assert_called_once_with(cleaned_input)
+		assert result_chunks == expected_chunks
+		mock_logging.error.assert_not_called()
+
+
+@patch('parser.parser.open')
+@patch('parser.parser.logging')
+def test_process_and_chunk_file_file_not_found(mock_logging, mock_open_func):
+	"""
+	Tests the function's error handling when a FileNotFoundError occurs.
+	It ensures the error is logged and an empty list is returned.
+	"""
+	test_filepath = "nonexistent/file.txt"
+	error_message = "File does not exist"
+	mock_open_func.side_effect = FileNotFoundError(error_message)
+
+	result_chunks = parser.process_and_chunk_file(test_filepath)
+
+	assert result_chunks == []
+	mock_logging.info.assert_called_once_with(f"Processing and chunking file: {test_filepath}")
+	mock_logging.error.assert_called_once_with(f"Error processing file {test_filepath}: {error_message}")
