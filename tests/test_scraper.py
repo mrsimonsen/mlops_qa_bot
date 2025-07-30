@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, mock_open
+from unittest.mock import patch, mock_open, MagicMock, call
 
 import scraper.scraper as scraper
 
@@ -57,3 +57,22 @@ def test_sanitize_filename(domain_input, expected_output):
 	"""
 	assert scraper.sanitize_filename(domain_input) == expected_output
 
+@pytest.mark.parametrize("url, base_domain, expected", [
+	#Test case: positive
+	("https://docs.example.com/path/page", "docs.example.com", True),
+	#Test case different subdomain
+	("https://api.example.com/path/page", "docs.example.com", False),
+	#Test case: different domains
+	("https://another-site.com", "docs.example.com", False),
+	#Test case: relative url
+	("/path/page", "docs.example.com", False),
+	#Test case: edge - url with www vs base_domain
+	("https://www.example.com", "example.com", False)
+])
+def test_is_valid_url(url, base_domain, expected):
+	"""
+	Tests the URL validation logic with various cases.
+	This test uses pytest.mark.parameterize to check multiple scenarios
+	efficiently without needing mocks.
+	"""
+	assert scraper.is_valid_url(url, base_domain) == expected
