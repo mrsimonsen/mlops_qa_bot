@@ -17,7 +17,6 @@ chromadb
 
 # MLOps & Orchestration
 zenml[server]
-zenml[kubeflow]
 mlflow
 docker
 dvc
