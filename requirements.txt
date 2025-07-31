@@ -10,6 +10,7 @@ aiohttp==3.12.15
     # via
     #   aiohttp-retry
     #   fsspec
+    #   ipinfo
 aiohttp-retry==2.9.1
     # via
     #   dvc-http
@@ -67,6 +68,7 @@ build==1.2.2.post1
 cachetools==5.5.2
     # via
     #   google-auth
+    #   ipinfo
     #   mlflow-skinny
 celery==5.5.3
     # via
@@ -118,7 +120,9 @@ configobj==5.0.9
 contourpy==1.3.3
     # via matplotlib
 cryptography==45.0.5
-    # via asyncssh
+    # via
+    #   asyncssh
+    #   pyjwt
 cycler==0.12.1
     # via matplotlib
 databricks-sdk==0.61.0
@@ -169,14 +173,16 @@ entrypoints==0.4
     # via gto
 executing==2.2.0
     # via stack-data
-fastapi==0.116.1
+fastapi==0.115.8
     # via
     #   -r requirements.in
     #   mlflow-skinny
+    #   zenml
 filelock==3.18.0
     # via
     #   huggingface-hub
     #   iterative-telemetry
+    #   tldextract
     #   torch
     #   transformers
 flask==3.1.1
@@ -267,6 +273,7 @@ idna==3.10
     #   anyio
     #   httpx
     #   requests
+    #   tldextract
     #   yarl
 importlib-metadata==8.7.0
     # via
@@ -276,6 +283,8 @@ importlib-resources==6.5.2
     # via chromadb
 iniconfig==2.1.0
     # via pytest
+ipinfo==5.2.0
+    # via zenml
 ipython==9.4.0
     # via ipywidgets
 ipython-pygments-lexers==1.1.1
@@ -285,13 +294,16 @@ ipywidgets==8.1.7
 iterative-telemetry==0.0.10
     # via dvc
 itsdangerous==2.2.0
-    # via flask
+    # via
+    #   flask
+    #   zenml
 jedi==0.19.2
     # via ipython
 jinja2==3.1.6
     # via
     #   flask
     #   torch
+    #   zenml
 joblib==1.5.1
     # via scikit-learn
 jsonschema==4.25.0
@@ -421,11 +433,12 @@ opentelemetry-sdk==1.36.0
     #   opentelemetry-exporter-otlp-proto-grpc
 opentelemetry-semantic-conventions==0.57b0
     # via opentelemetry-sdk
-orjson==3.11.1
+orjson==3.10.18
     # via
     #   chromadb
     #   dvc-data
     #   sqltrie
+    #   zenml
 overrides==7.7.0
     # via chromadb
 packaging==25.0
@@ -528,6 +541,8 @@ pygtrie==2.5.0
     #   dvc-data
     #   scmrepo
     #   sqltrie
+pyjwt[crypto]==2.7.0
+    # via zenml
 pymysql==1.1.1
     # via zenml
 pyparsing==3.2.3
@@ -555,6 +570,8 @@ python-dotenv==1.1.1
     # via
     #   pydantic-settings
     #   uvicorn
+python-multipart==0.0.20
+    # via zenml
 pytz==2025.2
     # via pandas
 pyyaml==6.0.2
@@ -581,12 +598,17 @@ requests==2.32.4
     #   dvc
     #   dvc-studio-client
     #   huggingface-hub
+    #   ipinfo
     #   iterative-telemetry
     #   kubernetes
     #   mlflow-skinny
     #   posthog
+    #   requests-file
     #   requests-oauthlib
+    #   tldextract
     #   transformers
+requests-file==2.1.0
+    # via tldextract
 requests-oauthlib==2.0.0
     # via kubernetes
 rich[jupyter]==14.1.0
@@ -623,6 +645,8 @@ scmrepo==3.4.0
     # via
     #   dvc
     #   gto
+secure==0.3.0
+    # via zenml
 semver==3.0.4
     # via gto
 sentence-transformers==5.0.0
@@ -664,7 +688,7 @@ sqltrie==0.11.2
     # via dvc-data
 stack-data==0.6.3
     # via ipython
-starlette==0.47.2
+starlette==0.45.3
     # via fastapi
 sympy==1.14.0
     # via
@@ -678,6 +702,8 @@ tenacity==9.1.2
     # via chromadb
 threadpoolctl==3.6.0
     # via scikit-learn
+tldextract==5.1.3
+    # via zenml
 tokenizers==0.21.4
     # via
     #   chromadb
@@ -730,7 +756,6 @@ typing-extensions==4.14.1
     #   referencing
     #   sentence-transformers
     #   sqlalchemy
-    #   starlette
     #   torch
     #   typer
     #   typing-inspection
@@ -752,6 +777,7 @@ uvicorn[standard]==0.35.0
     # via
     #   chromadb
     #   mlflow-skinny
+    #   zenml
 uvloop==0.21.0
     # via uvicorn
 vine==5.1.0
@@ -779,7 +805,7 @@ yarl==1.20.1
     # via aiohttp
 zc-lockfile==3.0.post1
     # via dvc
-zenml==0.84.1
+zenml[server]==0.84.1
     # via -r requirements.in
 zipp==3.23.0
     # via importlib-metadata

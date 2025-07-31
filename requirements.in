@@ -7,4 +7,4 @@ mlflow
 pytest
 requests
 sentence-transformers
-zenml
+zenml[server]
