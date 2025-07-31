@@ -4,6 +4,7 @@ from zenml import step, pipeline
 
 from src.scraper.scraper import scrape_single_url
 from src.parser.parser import parse_and_chunk_files
+from src.vectorizer.vectorizer import vectorize_and_store
 
 URLS_FILE = "urls_to_scrape.txt"
 
@@ -53,6 +54,14 @@ def parser_step(list_of_files: List[str]) -> Annotated[str, "processed_data_dir"
 	output_dir = parse_and_chunk_files(list_of_files)
 	return output_dir
 
+@step
+def vectorizer_step(processed_data_dir: str) -> None:
+	"""
+	ZenML step to vectorize data and store it in ChromaDB.
+	"""
+	logging.info("Starting vectorizer step...")
+	vectorize_and_store(processed_data_dir)
+
 # --- ZenML Pipeline ---
 
 @pipeline
@@ -63,8 +72,9 @@ def data_ingestion_pipeline():
 	# The scraper steps are passed as a list to the gather step
 	scraped_files = gather_scraped_files(*scraper_steps)
 	processed_data_dir = parser_step(scraped_files)
+	vectorizer_step(processed_data_dir)
 	
-	logging.info("Pipeline finished.")
+	logging.info("Data ingestion pipeline has completed successfully.")
 
 
 if __name__ == "__main__":
