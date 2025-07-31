@@ -212,11 +212,10 @@ __marimo__/
 #DVC tracked data
 .dvc/cache
 .dvc/tmp
-scrapped_data/
-processed_data/
 #ZenML local store
 /zenml_stores
 #MLflow files
 mlruns/
 mlflow.db
 /scrapped_data
+/processed_data
