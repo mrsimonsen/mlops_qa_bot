@@ -1,10 +1,32 @@
+#don't for get to update the requirements.txt
+#pip-compile requirements.in
+
+# Web Scraping & Parsing
 beautifulsoup4
+requests
+
+# API & Servicing
+fastapi
+uvicorn
+
+# LLM, RAG & Vector Storage
+langchain
+ollama
+sentence-transformers
 chromadb
+
+# MLOps & Orchestration
+zenml[server]
+zenml[kubeflow]
+mlflow
 docker
 dvc
-fastapi
-mlflow
+
+# Cloud & Infrastructure
+boto3
+
+# Utilities
+python-dotenv
+
+#Testing
 pytest
-requests
-sentence-transformers
-zenml[server]
