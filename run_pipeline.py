@@ -9,7 +9,7 @@ from src.vectorizer.vectorizer import vectorize_and_store
 URLS_FILE = "urls_to_scrape.txt"
 
 # --- Load URLs to Scrape ---
-def load_base_urls(filepath: str) -> Annotated[List[str], "base_urls_list"]:
+def load_base_urls(filepath: str) -> List[str]:
 	"""Loads a list of base URLs from a text file."""
 	try:
 		with open(filepath, 'r') as f:
@@ -19,38 +19,21 @@ def load_base_urls(filepath: str) -> Annotated[List[str], "base_urls_list"]:
 		logging.error(f"Error: URL file not found at '{filepath}'")
 		return []
 
-base_urls = load_base_urls(URLS_FILE)
-
 # --- ZenML Steps ---
-scraper_steps = []
-for url in base_urls:
-	#factory function to create unique step for each URL
-	@step(name=f"scrape_{url.split('//')[1].split('.')[0]}")
-	def scraper_step(url_to_scrape: str) -> Annotated[str, "scraped_file_path"]:
-		"""
-		ZenML step to run the web scraper for a single URL.
-		"""
-		logging.info("Starting scraper step for {url_to_scrape}...")
-		return scrape_single_url(url_to_scrape)
-	
 @step
-def gather_scraped_files(
-	files: List[str],
-) -> Annotated[List[str], "list_of_scraped_files"]:
+def scraper_step(url_to_scrape: str) -> Annotated[str, "scraped_file_path"]:
 	"""
-	This step gathers the file paths from all the parallel scraper steps.
+	ZenML step to run the web scraper for a single URL.
 	"""
-	# args will be a tuple of all the input file paths
-	file_paths = list(files)
-	logging.info(f"Gathered {len(file_paths)} files.")
-	return file_paths
+	logging.info(f"Starting scraper step for {url_to_scrape}...")
+	return scrape_single_url(url_to_scrape)
 
 @step
 def parser_step(list_of_files: List[str]) -> Annotated[str, "processed_data_dir"]:
 	"""
 	ZenML step to run the data parser on a list of files.
 	"""
-	logging.info("Starting parser step...")
+	logging.info(f"Starting parser step for {len(list_of_files)} files...")
 	output_dir = parse_and_chunk_files(list_of_files)
 	return output_dir
 
@@ -64,17 +47,20 @@ def vectorizer_step(processed_data_dir: str) -> None:
 
 # --- ZenML Pipeline ---
 
-@pipeline
+@pipeline(enable_cache=False)
 def data_ingestion_pipeline():
 	"""
 	The data ingestion pipeline with parallel scraping.
 	"""
-	# The scraper steps are passed as a list to the gather step
-	scraped_files_list = [step_output for step_output in scraper_steps]
-	scraped_files = gather_scraped_files(scraped_files_list)
-	processed_data_dir = parser_step(scraped_files)
-	vectorizer_step(processed_data_dir)
-	
+	scraped_files_outputs = []
+	for url in load_base_urls(URLS_FILE):
+		# ZenML understands these are dependencies that need to be run.
+		scraped_files_outputs.append(scraper_step(url_to_scrape=url))
+
+	# ZenML will automatically wait for all scraper steps to complete.
+	processed_data_dir = parser_step(list_of_files=scraped_files_outputs)
+	vectorizer_step(processed_data_dir=processed_data_dir)
+
 	logging.info("Data ingestion pipeline has completed successfully.")
 
 
