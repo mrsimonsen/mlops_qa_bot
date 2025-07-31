@@ -1,0 +1,8 @@
+beautifulsoup4
+docker
+dvc
+fastapi
+mlflow
+pytest
+requests
+zenml
