@@ -3,6 +3,7 @@ from typing import List, Annotated
 from zenml import step, pipeline
 
 from src.scraper.scraper import scrape_single_url
+from src.parser.parser import parse_and_chunk_files
 
 URLS_FILE = "urls_to_scrape.txt"
 
@@ -43,6 +44,14 @@ def gather_scraped_files(
 	logging.info(f"Gathered {len(file_paths)} files.")
 	return file_paths
 
+@step
+def parser_step(list_of_files: List[str]) -> Annotated[str, "processed_data_dir"]:
+	"""
+	ZenML step to run the data parser on a list of files.
+	"""
+	logging.info("Starting parser step...")
+	output_dir = parse_and_chunk_files(list_of_files)
+	return output_dir
 
 # --- ZenML Pipeline ---
 
@@ -53,6 +62,7 @@ def data_ingestion_pipeline():
 	"""
 	# The scraper steps are passed as a list to the gather step
 	scraped_files = gather_scraped_files(*scraper_steps)
+	processed_data_dir = parser_step(scraped_files)
 	
 	logging.info("Pipeline finished.")
 
