@@ -217,5 +217,7 @@ __marimo__/
 #MLflow files
 mlruns/
 mlflow.db
+
 /scrapped_data
 /processed_data
+/chroma_db
