@@ -35,13 +35,13 @@ for url in base_urls:
 	
 @step
 def gather_scraped_files(
-	*args: str,
+	files: List[str],
 ) -> Annotated[List[str], "list_of_scraped_files"]:
 	"""
 	This step gathers the file paths from all the parallel scraper steps.
 	"""
 	# args will be a tuple of all the input file paths
-	file_paths = list(args)
+	file_paths = list(files)
 	logging.info(f"Gathered {len(file_paths)} files.")
 	return file_paths
 
@@ -70,7 +70,8 @@ def data_ingestion_pipeline():
 	The data ingestion pipeline with parallel scraping.
 	"""
 	# The scraper steps are passed as a list to the gather step
-	scraped_files = gather_scraped_files(*scraper_steps)
+	scraped_files_list = [step_output for step_output in scraper_steps]
+	scraped_files = gather_scraped_files(scraped_files_list)
 	processed_data_dir = parser_step(scraped_files)
 	vectorizer_step(processed_data_dir)
 	
