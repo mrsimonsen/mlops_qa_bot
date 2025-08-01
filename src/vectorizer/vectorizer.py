@@ -3,7 +3,7 @@ import logging
 import chromadb
 from sentence_transformers import SentenceTransformer
 from typing import List
-from .config import EMBEDDING_MODEL_NAME, PERSIST_DIRECTORY, COLLECTION_NAME
+from .config import EMBEDDING_MODEL_NAME, DB_DIR, COLLECTION_NAME
 
 def read_chunks_from_file(filepath: str) -> List[str]:
 	"""
@@ -29,7 +29,7 @@ def vectorize_and_store(processed_data_dir: str):
 	model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 
 	#2. Initialize ChromaDB client
-	client = chromadb.PersistentClient(path=PERSIST_DIRECTORY)
+	client = chromadb.PersistentClient(path=DB_DIR)
 	collection = client.get_or_create_collection(name=COLLECTION_NAME)
 
 	#3. Read all chunks from all processed files
@@ -62,4 +62,4 @@ def vectorize_and_store(processed_data_dir: str):
 	)
 
 	logging.info(f"Successfully vectorized and stored {len(all_chunks)} documents in collection '{COLLECTION_NAME}")
-	logging.info(f"Vector database persisted at: {PERSIST_DIRECTORY}")
+	logging.info(f"Vector database persisted at: {DB_DIR}")

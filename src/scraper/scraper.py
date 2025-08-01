@@ -5,8 +5,8 @@ from urllib.parse import urljoin, urlparse
 import time
 import re
 import logging
-from typing import List, Set, Tuple, Annotated
-from .config import OUTPUT_DIR, REQUEST_DELAY
+from typing import Set, Tuple, Annotated
+from .config import SCRAPED_DATA_DIR, REQUEST_DELAY
 
 # --- Helper Functions ---
 def sanitize_filename(domain: str) -> str:
@@ -144,13 +144,13 @@ def scrape_single_url(base_url: str) -> Annotated[str, "scraped_file_path"]:
 		output_filepath: str, the path to the text file the contains the scraped
 		  content.
 	"""
-	os.makedirs(OUTPUT_DIR, exist_ok=True)
+	os.makedirs(SCRAPED_DATA_DIR, exist_ok=True)
 	session = requests.Session()
 	session.headers.update( {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
 
 	domain = urlparse(base_url).netloc
 	output_filename = sanitize_filename(domain)
-	output_filepath = os.path.join(OUTPUT_DIR, output_filename)
+	output_filepath = os.path.join(SCRAPED_DATA_DIR, output_filename)
 
 	crawl_site(base_url, session, output_filepath)
 	return output_filepath

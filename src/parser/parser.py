@@ -2,7 +2,7 @@ import os
 import re
 import logging
 from typing import List, Annotated
-from .config import OUTPUT_DIR, CHUNK_SIZE, CHUNK_OVERLAP
+from .config import PROCESSED_DATA_DIR, CHUNK_SIZE, CHUNK_OVERLAP
 
 # --- Helper Functions ---
 def clean_text(text: str) -> str:
@@ -82,17 +82,17 @@ def parse_and_chunk_files(list_of_files: List[str]) -> str:
 	RETURNS:
 		output_dir: str, the path to the output directory.
 	"""
-	os.makedirs(OUTPUT_DIR, exist_ok=True)
+	os.makedirs(PROCESSED_DATA_DIR, exist_ok=True)
 
 	for file_path in list_of_files:
 		if os.path.exists(file_path):
 			chunks = process_and_chunk_file(file_path)
 			if chunks:
 				base_filename = os.path.basename(file_path)
-				output_filepath = os.path.join(OUTPUT_DIR, f"processed_{base_filename}")
+				output_filepath = os.path.join(PROCESSED_DATA_DIR, f"processed_{base_filename}")
 				with open(output_filepath, 'w') as f:
 					f.write("\n---Chunk---\n".join(chunks))
 				logging.info(f"Saved {len(chunks)} chunks to {output_filepath}")
 
-	logging.info(f"All parsing and chunking tasks complete. Output is in '{OUTPUT_DIR}'")
-	return OUTPUT_DIR
+	logging.info(f"All parsing and chunking tasks complete. Output is in '{PROCESSED_DATA_DIR}'")
+	return str(PROCESSED_DATA_DIR)
