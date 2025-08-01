@@ -68,6 +68,7 @@ if __name__ == "__main__":
 	# To run this pipeline, use the ZenML CLI with an active Kubeflow stack:
 	# service docker start
 	# minikube start --driver=docker
+	# kubectl port-forward service/minio-service 9000:9000
 	# zenml pipeline run run_pipeline.data_ingestion_pipeline
 	data_ingestion_pipeline_instance = data_ingestion_pipeline()
 	logging.info("Pipeline definition loaded. To run, use ZenML CLI.")

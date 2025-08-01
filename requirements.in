@@ -24,6 +24,8 @@ kfp-kubernetes
 
 # Cloud & Infrastructure
 boto3
+aws-profile-manager
+s3fs
 
 # Utilities
 python-dotenv
