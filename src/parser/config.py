@@ -1,4 +1,4 @@
-from src.config import SCRAPED_DATA_DIR, PROCESSED_DATA_DIR
+from config import SCRAPED_DATA_DIR, PROCESSED_DATA_DIR
 
 #text chunk size in characters
 CHUNK_SIZE = 1024

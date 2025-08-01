@@ -2,8 +2,8 @@ import pytest
 from unittest.mock import patch, mock_open, MagicMock, ANY
 import requests
 
-import scraper.scraper as scraper
-from scraper.config import OUTPUT_DIR
+from scraper import scraper
+from scraper.config import SCRAPED_DATA_DIR
 
 test_cases = [
 	("standard domain", "docs.zenml.io", "docs_zenml_io.txt"),
@@ -146,7 +146,7 @@ def test_scrape_single_url(mock_makedirs, mock_session_constructor, mock_crawl_s
 	"""
 	#set up
 	base_url = "https://docs.test.com/some/path"
-	expected_output_path = f'{OUTPUT_DIR}/docs_test_com.txt'
+	expected_output_path = f'{SCRAPED_DATA_DIR}/docs_test_com.txt'
 	
 	mock_session_instance = MagicMock()
 	mock_session_constructor.return_value = mock_session_instance
@@ -156,7 +156,7 @@ def test_scrape_single_url(mock_makedirs, mock_session_constructor, mock_crawl_s
 
 	# assert
 	#verify output directory creation
-	mock_makedirs.assert_called_once_with(OUTPUT_DIR, exist_ok=True)
+	mock_makedirs.assert_called_once_with(SCRAPED_DATA_DIR, exist_ok=True)
 	# verify session was created and headers updated
 	mock_session_constructor.assert_called_once()
 	mock_session_instance.headers.update.assert_called_once()

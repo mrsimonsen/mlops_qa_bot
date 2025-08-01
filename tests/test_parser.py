@@ -2,8 +2,8 @@ import pytest
 import os
 from unittest.mock import patch, mock_open
 
-import parser.parser as parser
-from parser.config import OUTPUT_DIR
+from parser import parser
+from parser.config import PROCESSED_DATA_DIR
 test_cases = [
 	("no change", "This is a clean sentence.", "This is a clean sentence."),
 	("excessive newlines", "Hello\n\n\n\nWorld", "Hello\n\nWorld"),
@@ -206,16 +206,16 @@ def test_parse_and_chunk_files(
 
 	result_dir = parser.parse_and_chunk_files(input_files)
 
-	mock_makedirs.assert_called_once_with(OUTPUT_DIR, exist_ok=True)
+	mock_makedirs.assert_called_once_with(PROCESSED_DATA_DIR, exist_ok=True)
 	assert mock_process.call_count == process_calls
 	assert mock_open_func.call_count == open_calls
 
 	if open_calls > 0:
 		for i, fname in enumerate(out_fnames):
-			expected_path = os.path.join(OUTPUT_DIR, fname)
+			expected_path = os.path.join(PROCESSED_DATA_DIR, fname)
 			mock_open_func.assert_any_call(expected_path, 'w')
 			handle = mock_open_func()
 			handle.write.assert_any_call(written_data[i])
 	
-	mock_logging.info.assert_called_with(f"All parsing and chunking tasks complete. Output is in '{OUTPUT_DIR}'")
-	assert result_dir == OUTPUT_DIR
+	mock_logging.info.assert_called_with(f"All parsing and chunking tasks complete. Output is in '{PROCESSED_DATA_DIR}'")
+	assert str(result_dir) == str(PROCESSED_DATA_DIR)

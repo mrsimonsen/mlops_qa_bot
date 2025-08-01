@@ -2,8 +2,8 @@ import pytest
 import numpy as np
 from unittest.mock import mock_open, patch, MagicMock
 
-import vectorizer.vectorizer as vectorizer
-from vectorizer.config import EMBEDDING_MODEL_NAME, PERSIST_DIRECTORY, COLLECTION_NAME
+from vectorizer import vectorizer
+from vectorizer.config import EMBEDDING_MODEL_NAME, DB_DIR, COLLECTION_NAME
 
 test_cases = [
 	(
@@ -73,7 +73,7 @@ def test_vectorize_and_store(mock_read_chunks, mock_sentence_transformer, mock_c
 	mock_read_chunks.assert_called_once_with('processed_data/test_file.txt')
 	mock_sentence_transformer.assert_called_once_with(EMBEDDING_MODEL_NAME)
 	mock_model.encode.assert_called_once_with(['chunk1', 'chunk2'], show_progress_bar=True)
-	mock_chromadb.PersistentClient.assert_called_once_with(path=PERSIST_DIRECTORY)
+	mock_chromadb.PersistentClient.assert_called_once_with(path=DB_DIR)
 	mock_client.get_or_create_collection.assert_called_once_with(name=COLLECTION_NAME)
 	mock_collection.add.assert_called_once_with(
 		embeddings=mock_embeddings.tolist(),
