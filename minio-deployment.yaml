@@ -29,7 +29,9 @@ metadata:
 spec:
   selector:
     app: minio
+  type: NodePort # Use NodePort to expose the service
   ports:
     - protocol: TCP
       port: 9000
       targetPort: 9000
+      nodePort: 30000 # Exposed on port 30000 of your Minikube IP
