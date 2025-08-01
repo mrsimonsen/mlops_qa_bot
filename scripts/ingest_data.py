@@ -2,10 +2,10 @@ import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
 
-from src.config import URLS_FILE, LOGGING_LEVEL
-from src.scraper.scraper import scrape_single_url
-from src.parser.parser import parse_and_chunk_files
-from src.vectorizer.vectorizer import vectorize_and_store
+from config import URLS_FILE, LOGGING_LEVEL
+from scraper.scraper import scrape_single_url
+from parser.parser import parse_and_chunk_files
+from vectorizer.vectorizer import vectorize_and_store
 
 # --- Main Logic ---
 def setup_logging():
