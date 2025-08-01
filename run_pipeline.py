@@ -1,7 +1,7 @@
 import logging
 from typing import List, Annotated
 import json
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from zenml import step, pipeline
 from zenml.config.docker_settings import DockerSettings
@@ -18,6 +18,7 @@ def load_base_urls(filepath: str) -> List[str]:
 	try:
 		with open(filepath, 'r') as f:
 			urls = [line.strip() for line in f.readlines()]
+		logging.info(f"Loaded {len(urls)} URLs from '{filepath}")
 		return urls
 	except FileNotFoundError:
 		logging.error(f"Error: URL file not found at '{filepath}'")
@@ -29,10 +30,18 @@ def scraper_step(urls_to_scrape: List[str]) -> Annotated[List[str], "scraped_fil
 	"""
 	Scrapes all URLs in parallel and returns a list of file paths.
 	"""
-	def scrape(url):
-		return scrape_single_url(url)
-	with ThreadPoolExecutor() as executor:
-		scraped_files = list(executor.map(scrape, urls_to_scrape))
+	scraped_files = []
+	with ThreadPoolExecutor(max_workers=5) as executor:
+		future_to_url = {executor.submit(scrape_single_url, url): url for url in urls_to_scrape}
+		for future in as_completed(future_to_url):
+			url = future_to_url[future]
+			try:
+				file_path = future.result()
+				if file_path:
+					scraped_files.append(file_path)
+					logging.info(f"Successfully scraped {url} to {file_path}")
+			except Exception as e:
+				logging.error(f"{url} generated an exception: {e}")
 	return scraped_files
 
 @step
@@ -74,9 +83,9 @@ if __name__ == "__main__":
 	# To run this pipeline, use the ZenML CLI with an active Kubeflow stack:
 	# service docker start
 	# minikube start --driver=docker
-	# kubectl port-forward service/minio-service 9000:9000
-	# export AWS_ENDPOINT_URL=http://127.0.0.1:9000
-	# mc alias set myminio http://127.0.0.1:9000 minio minio123
+	# MINIKUBE_IP=$(minikube ip)
+	# export AWS_ENDPOINT_URL=http://${MINIKUBE_IP}:30000
+	# mc alias set myminio $AWS_ENDPOINT_URL minio minio123
 	# mc mb myminio/zenml
 	# zenml pipeline run run_pipeline.data_ingestion_pipeline
 	data_ingestion_pipeline_instance = data_ingestion_pipeline()
