@@ -1,128 +1,103 @@
-# MLOps Stack Q&A Bot
+# MLOps Q&A Bot
 
-This project is a comprehensive Question-Answering bot that uses a Retrieval-Augmented Generation (RAG) architecture to answer questions about MLOps tools. It leverages a modern MLOps stack, including ZenML for pipeline orchestration, Kubeflow for Kubernetes-native execution, and FastAPI for API delivery.
+## Project Description
 
-The entire workflow, from data ingestion to cloud deployment, is automated, showcasing a production-grade approach to building and managing LLM applications.
+This project is a question-answering bot that specializes in MLOps tools. The bot is designed to answer questions about a variety of MLOps tools, including ZenML, MLflow, and Docker. The project is broken down into two main stages: first, building and containerizing the model locally, and second, creating an MLOps pipeline to automate the deployment of the model to a production environment on AWS.
 
-## Core Technology Stack
+## Project Goal
 
-- **Application Framework**: Python, FastAPI
-- **LLM Engine**: Ollama (for local development and experimentation)
-- **Vector Database**: ChromaDB
-- **Pipeline Orchestration**: ZenML
-- **Orchestrator**: **Kubeflow** (on local K8s & AWS EKS)
-- **Experiment Tracking**: MLflow
-- **Containerization**: Docker
-- **Cloud Provider**: AWS (Amazon Web Services)
-- **Infrastructure as Code**: Terraform
-- **Deployment Target**: **Amazon EKS (Elastic Kubernetes Service)**
-- **CI/CD**: GitHub Actions
+The primary goal of this project is to build a reliable and scalable question-answering bot that can be used to quickly find information about MLOps tools. This project will also serve as a practical example of how to build and deploy a machine learning model using modern MLOps practices.
 
-## Architecture Overview
+## Project Plan
 
-The project follows a standard MLOps workflow, orchestrated by ZenML and Kubeflow.
+The project is divided into the following stages and phases:
 
-```
-+-------------------+      +----------------------+      +------------------+
-|   Documentation   |----->|  Data Ingestion      |----->|  Vector Database |
-| (ZenML, MLflow)   |      |  (ZenML Pipeline)    |      |  (ChromaDB)      |
-+-------------------+      +----------------------+      +------------------+
-        ^                           |                            |
-        |                           | (Run on Kubeflow)          | (Retrieved Context)
-        |                           |                            v
-+-------------------+      +----------------------+      +------------------+
-|   User via API    |<---->|  FastAPI Application |----->|  RAG Engine      |
-|  (FastAPI)        |      |  (Docker Container)  |      |  (Ollama)        |
-+-------------------+      +----------------------+      +------------------+
-```
+### Stage 1: Model Development and Local Implementation
 
-## Project Phases
+This stage focuses on creating and testing the core question-answering model on a local machine.
 
-This project is structured into several distinct phases:
+**Phase 1: Foundation & Data Engineering (Local)**
 
-1.  **Foundation & Data Engineering**: Scraping documentation, processing it, and creating a vector store.
-2.  **RAG Application Development**: Building the core FastAPI application that serves answers.
-3.  **MLOps Orchestration with Kubeflow**: Defining and running the data pipeline on a local Kubernetes cluster.
-4.  **Cloud Infrastructure as Code**: Using Terraform to provision the necessary AWS resources (EKS, ECR, S3).
-5.  **CI/CD to EKS**: Automating the build, test, and deployment process with GitHub Actions.
+* **Task 1.1: Environment Setup**: Initialize a Git repository, set up a Python environment, and install Ollama for local LLM experimentation.
+* **Task 1.2: Documentation Scraping**: Write and execute scripts to scrape the official documentation for the MLOps tools that the bot will be an expert on. These tools include ZenML, MLflow, Docker, and others.
+* **Task 1.3: Data Processing and Chunking**: Clean the scraped text to remove irrelevant artifacts and then split it into smaller, more manageable chunks for processing.
+* **Task 1.4: Vectorization and Storage**: Convert the text chunks into numerical embeddings and store them in a local ChromaDB instance to create a vector database.
 
-## Local Setup and Installation
+**Phase 2: RAG Application Development (Local)**
+
+* **Task 2.1: Core RAG Logic**: Develop the core Retrieval-Augmented Generation (RAG) logic, including the retriever that fetches relevant context from the vector database and the generator that creates answers.
+* **Task 2.2: API Service with FastAPI**: Build a RESTful API with a `/query` endpoint using FastAPI to serve the model's answers.
+* **Task 2.3: Containerize the Application**: Write a Dockerfile to package the FastAPI application into a container, ensuring that it can be deployed consistently across different environments.
+* **Task 2.4: Unit & Integration Testing**: Use `pytest` to write and run tests that ensure the reliability and correctness of the application's components.
+
+### Stage 2: MLOps Pipeline and Cloud Deployment
+
+Once the model is working locally, this stage will focus on automating the data pipeline and deploying the application to a production environment on the cloud.
+
+**Phase 3: MLOps Orchestration with Kubeflow (Local)**
+
+* **Task 3.1: Local Kubernetes Setup**: Install and configure a local Kubernetes cluster using Docker Desktop or Minikube to simulate a production environment.
+* **Task 3.2: ZenML Kubeflow Stack**: Install the ZenML Kubeflow integration and configure a new ZenML stack that uses the local Kubeflow instance as its orchestrator.
+* **Task 3.3: ZenML Pipeline Execution**: Run the data ingestion pipeline on the Kubeflow stack, which will execute the pipeline's steps as pods within the local Kubernetes cluster.
+* **Task 3.4: MLflow Integration**: Log pipeline parameters and evaluation metrics to MLflow to track experiments and monitor performance.
+
+**Phase 4: Cloud Infrastructure as Code (IaC) with EKS**
+
+* **Task 4.1: Terraform Scripts for AWS**: Write Terraform configuration files to define and provision the necessary cloud infrastructure on AWS, including:
+    * An Amazon EKS (Elastic Kubernetes Service) cluster to serve as the production environment.
+    * An ECR (Elastic Container Registry) to host the production Docker image.
+    * An S3 bucket to store the production vector database and other artifacts.
+    * IAM roles and security groups to ensure secure communication between the different services.
+* **Task 4.2: Provision Infrastructure**: Run `terraform apply` to create the cloud resources defined in the scripts.
+
+**Phase 5: Continuous Integration & Deployment (CI/CD) to EKS**
+
+* **Task 5.1: GitHub Actions Workflow**: Create a CI/CD workflow using GitHub Actions by defining the necessary steps in a `.github/workflows/main.yml` file.
+* **Task 5.2: CI - Automated Testing & Building**: Configure the workflow to:
+    * Run the `pytest` suite automatically on every push to the main branch.
+    * Build the Docker image and push it to the AWS ECR repository upon successful testing.
+* **Task 5.3: CD - Automated Deployment to EKS**:
+    * Store AWS credentials and EKS cluster details as secrets in GitHub to allow the workflow to access the cloud environment securely.
+    * Use `kubectl` to apply a Kubernetes deployment manifest, which will instruct the EKS cluster to pull the new image from ECR and deploy it as a pod.
+
+## Getting Started
 
 ### Prerequisites
 
--   Python 3.9+
--   Docker Desktop (with Kubernetes enabled) or Minikube
--   Terraform
--   An AWS account with credentials configured locally
+* Python 3.8+
+* Docker
+* Git
 
-### Installation Steps
+### Installation
 
-1.  **Clone the repository:**
-    ```bash
-    git clone <your-repo-url>
-    cd <your-repo-name>
-    ```
+1.  Clone the repository:
 
-2.  **Create and activate a virtual environment:**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate
-    ```
+```bash
+git clone [https://github.com/your-username/your-repository.git](https://github.com/your-username/your-repository.git)
+```
 
-3.  **Install Python dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+2. Install the required packages:
 
-4.  **Install and initialize ZenML:**
-    ```bash
-    zenml init
-    ```
+```bash
+pip install -r requirements.txt
+```
 
-5.  **Set up a local Kubernetes cluster:**
-    -   **Using Docker Desktop**: Go to `Settings > Kubernetes` and check `Enable Kubernetes`.
-    -   **Using Minikube**: Follow the official Minikube installation guide.
+3. Run the application:
 
-6.  **Install the ZenML Kubeflow Integration:**
-    ```bash
-    zenml integration install kubeflow -y
-    ```
+```bash
+uvicorn main:app --reload
+```
 
-7.  **Register a Kubeflow Stack:**
-    Create a ZenML stack that points to your local Kubernetes cluster.
-    ```bash
-    zenml orchestrator register kubeflow_orchestrator --flavor=kubeflow
-    zenml stack register kubeflow_stack -o kubeflow_orchestrator -a default
-    zenml stack set kubeflow_stack
-    ```
+## Tech Stack
 
-## Running the Pipeline
-
-The core data ingestion process is managed by a ZenML pipeline.
-
-1.  **Populate the URL list:**
-    Add the documentation URLs you want to scrape into the `urls_to_scrape.txt` file.
-
-2.  **Run the ZenML pipeline:**
-    This command will execute the pipeline using your active ZenML stack (which should be the Kubeflow stack).
-    ```bash
-    python run_pipeline.py
-    ```
-    ZenML will translate this pipeline into a Kubeflow workflow, which will run as pods in your local Kubernetes cluster.
-
-3.  **Launch the API:**
-    Once the pipeline has successfully populated the vector database, you can run the FastAPI application.
-    ```bash
-    uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
-    ```
-    You can now send queries to `http://localhost:8000/query`.
-
-## Cloud Deployment (CI/CD)
-
-This project is designed for automated deployment to AWS EKS using Terraform and GitHub Actions.
-
-1.  **Infrastructure as Code**: The Terraform scripts in the `/terraform` directory define the cloud infrastructure, including the EKS cluster, ECR registry, and S3 bucket for artifacts.
-
-2.  **GitHub Actions Workflow**: The `.github/workflows/main.yml` file defines the CI/CD pipeline:
-    -   **CI**: On every push to `main`, the workflow installs dependencies, runs `pytest`, and builds a new Docker image.
-    -   **CD**: If the CI steps pass, the Docker image is pushed to AWS ECR. A Kubernetes deployment manifest is then applied to the EKS cluster, which triggers a rolling update to the new application version.
+* **Python**: The core programming language for the project.
+* **FastAPI**: A modern, fast (high-performance), web framework for building APIs with Python 3.8+ based on standard Python type hints.
+* **Docker**: A platform for developing, shipping, and running applications in containers.
+* **ChromaDB**: An open-source embedding database for building AI applications.
+* **ZenML**: An extensible, open-source MLOps framework for creating portable, production-ready MLOps pipelines.
+* **MLflow**: An open-source platform for managing the end-to-end machine learning lifecycle.
+* **Kubeflow**: A machine learning toolkit for Kubernetes.
+* **AWS**: Amazon Web Services, a cloud computing platform.
+* **Terraform**: An open-source infrastructure as code software tool.
+* **GitHub Actions**: A CI/CD platform that allows you to automate your build, test, and deployment pipeline.
+* **Pytest**: A testing framework for Python.
