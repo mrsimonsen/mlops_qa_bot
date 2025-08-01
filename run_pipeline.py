@@ -1,11 +1,14 @@
 import logging
 from typing import List, Annotated
-from zenml import step, pipeline
 import json
+from concurrent.futures import ThreadPoolExecutor
+
+from zenml import step, pipeline
+from zenml.config.docker_settings import DockerSettings
+
 from src.scraper.scraper import scrape_single_url
 from src.parser.parser import parse_and_chunk_files
 from src.vectorizer.vectorizer import vectorize_and_store
-from concurrent.futures import ThreadPoolExecutor
 
 URLS_FILE = "urls_to_scrape.txt"
 
@@ -48,7 +51,10 @@ def vectorizer_step(processed_data_dir: str) -> None:
 	logging.info("Starting vectorizer step...")
 	vectorize_and_store(processed_data_dir)
 
-@pipeline(enable_cache=False)
+# --- Docker Settings for the Pipeline ---
+docker_settings = DockerSettings(disable_automatic_requirements_detection=False)
+
+@pipeline(enable_cache=False, settings={"docker": docker_settings})
 def data_ingestion_pipeline():
 	"""
 	The data ingestion pipeline with parallel scraping using .map().
