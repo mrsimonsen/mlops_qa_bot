@@ -37,7 +37,12 @@ def is_valid_url(url: str, base_domain: str) -> bool:
 		is_valid: bool, True if the full URL is valid and a part of the base_domain
 	"""
 	parsed_url = urlparse(url)
-	return bool(parsed_url.scheme) and bool(parsed_url.netloc) and parsed_url.netloc == base_domain
+	#allow for www. subdomain matching
+	return (
+		bool(parsed_url.scheme) and
+		bool(parsed_url.netloc) and
+		(parsed_url.netloc == base_domain or parsed_url.netloc == f'www.{base_domain}')
+		)
 
 # --- Main Logic ---
 
