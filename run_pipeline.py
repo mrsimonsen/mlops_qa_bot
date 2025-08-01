@@ -1,10 +1,11 @@
 import logging
 from typing import List, Annotated
 from zenml import step, pipeline
-
+import json
 from src.scraper.scraper import scrape_single_url
 from src.parser.parser import parse_and_chunk_files
 from src.vectorizer.vectorizer import vectorize_and_store
+from concurrent.futures import ThreadPoolExecutor
 
 URLS_FILE = "urls_to_scrape.txt"
 
@@ -21,20 +22,22 @@ def load_base_urls(filepath: str) -> List[str]:
 
 # --- ZenML Steps ---
 @step
-def scraper_step(url_to_scrape: str) -> Annotated[str, "scraped_file_path"]:
+def scraper_step(urls_to_scrape: List[str]) -> Annotated[List[str], "scraped_file_paths"]:
 	"""
-	ZenML step to run the web scraper for a single URL.
+	Scrapes all URLs in parallel and returns a list of file paths.
 	"""
-	logging.info(f"Starting scraper step for {url_to_scrape}...")
-	return scrape_single_url(url_to_scrape)
+	def scrape(url):
+		return scrape_single_url(url)
+	with ThreadPoolExecutor() as executor:
+		scraped_files = list(executor.map(scrape, urls_to_scrape))
+	return scraped_files
 
 @step
-def parser_step(list_of_files: List[str]) -> Annotated[str, "processed_data_dir"]:
+def parser_step(scraped_file_paths: List[str]) -> Annotated[str, "processed_data_dir"]:
 	"""
-	ZenML step to run the data parser on a list of files.
+	Parses and chunks all scraped files.
 	"""
-	logging.info(f"Starting parser step for {len(list_of_files)} files...")
-	output_dir = parse_and_chunk_files(list_of_files)
+	output_dir = parse_and_chunk_files(scraped_file_paths)
 	return output_dir
 
 @step
@@ -45,24 +48,26 @@ def vectorizer_step(processed_data_dir: str) -> None:
 	logging.info("Starting vectorizer step...")
 	vectorize_and_store(processed_data_dir)
 
-# --- ZenML Pipeline ---
-
 @pipeline(enable_cache=False)
 def data_ingestion_pipeline():
 	"""
-	The data ingestion pipeline with parallel scraping.
+	The data ingestion pipeline with parallel scraping using .map().
 	"""
-	scraped_files_outputs = []
-	for url in load_base_urls(URLS_FILE):
-		# ZenML understands these are dependencies that need to be run.
-		scraped_files_outputs.append(scraper_step(url_to_scrape=url))
-
-	# ZenML will automatically wait for all scraper steps to complete.
-	processed_data_dir = parser_step(list_of_files=scraped_files_outputs)
-	vectorizer_step(processed_data_dir=processed_data_dir)
+	base_urls = load_base_urls(URLS_FILE)
+	if not base_urls:
+		logging.warning("No URLs to scrape. Pipeline will not run.")
+		return
+	scraped_files = scraper_step(base_urls)
+	processed_data_dir = parser_step(scraped_files)
+	vectorizer_step(processed_data_dir)
 
 	logging.info("Data ingestion pipeline has completed successfully.")
 
 
 if __name__ == "__main__":
-	data_ingestion_pipeline()
+	# To run this pipeline, use the ZenML CLI with an active Kubeflow stack:
+	# service docker start
+	# minikube start --driver=docker
+	# zenml pipeline run run_pipeline.data_ingestion_pipeline
+	data_ingestion_pipeline_instance = data_ingestion_pipeline()
+	logging.info("Pipeline definition loaded. To run, use ZenML CLI.")
