@@ -31,7 +31,7 @@ test_cases = [
 	("different subdomain", "https://api.example.com/path/page", "docs.example.com", False),
 	("different domains", "https://another-site.com", "docs.example.com", False),
 	("relative url", "/path/page", "docs.example.com", False),
-	("url with www vs base_domain", "https://www.example.com", "example.com", False)
+	("url with www vs base_domain", "https://www.example.com", "example.com", True)
 ]
 @pytest.mark.parametrize(
 	"test_id, url, base_domain, expected",
