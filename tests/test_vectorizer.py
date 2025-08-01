@@ -51,7 +51,9 @@ def test_read_chunks_from_file(test_id, file_content, expected_output):
 @patch('vectorizer.vectorizer.chromadb')
 @patch('vectorizer.vectorizer.SentenceTransformer')
 @patch('vectorizer.vectorizer.read_chunks_from_file')
-def test_vectorize_and_store(mock_read_chunks, mock_sentence_transformer, mock_chromadb, mock_logging, mock_os):
+def test_vectorize_and_store(mock_read_chunks, mock_sentence_transformer, mock_chromadb, mock_logging, mock_os, tmp_path):
+	test_db_path = str(tmp_path / "test_chroma_db")
+
 	mock_os.path.join.side_effect = lambda a, b: f"{a}/{b}"
 	mock_os.listdir.return_value = ['test_file.txt']
 	mock_os.path.isfile.return_value = True
@@ -67,13 +69,14 @@ def test_vectorize_and_store(mock_read_chunks, mock_sentence_transformer, mock_c
 	mock_client.get_or_create_collection.return_value = mock_collection
 	mock_chromadb.PersistentClient.return_value = mock_client
 
-	vectorizer.vectorize_and_store('processed_data')
+	with patch('vectorizer.vectorizer.DB_DIR', test_db_path):
+		vectorizer.vectorize_and_store('processed_data')
 
 	mock_os.listdir.assert_called_once_with("processed_data")
 	mock_read_chunks.assert_called_once_with('processed_data/test_file.txt')
 	mock_sentence_transformer.assert_called_once_with(EMBEDDING_MODEL_NAME)
 	mock_model.encode.assert_called_once_with(['chunk1', 'chunk2'], show_progress_bar=True)
-	mock_chromadb.PersistentClient.assert_called_once_with(path=DB_DIR)
+	mock_chromadb.PersistentClient.assert_called_once_with(path=test_db_path)
 	mock_client.get_or_create_collection.assert_called_once_with(name=COLLECTION_NAME)
 	mock_collection.add.assert_called_once_with(
 		embeddings=mock_embeddings.tolist(),
@@ -86,14 +89,16 @@ def test_vectorize_and_store(mock_read_chunks, mock_sentence_transformer, mock_c
 @patch('vectorizer.vectorizer.logging')
 @patch('vectorizer.vectorizer.read_chunks_from_file')
 @patch('vectorizer.vectorizer.SentenceTransformer')
-def test_vectorize_and_store_no_chunks(mock_sentence_transformer, mock_read_chunks, mock_logging, mock_os):
+def test_vectorize_and_store_no_chunks(mock_sentence_transformer, mock_read_chunks, mock_logging, mock_os, tmp_path):
 	"""
 	Tests that vectorize_and_store handles the case where no chunks are found.
 	"""
+	test_db_path= str(tmp_path / "test_chroma_db_empty")
 	mock_os.listdir.return_value = ['test_file.txt']
 	mock_os.path.isfile.return_value = True
 	mock_read_chunks.return_value = [] # No chunks
 
-	vectorizer.vectorize_and_store('processed_data')
+	with patch("vectorizer.vectorizer.DB_DIR", test_db_path):
+		vectorizer.vectorize_and_store('processed_data')
 
 	mock_logging.warning.assert_called_with("No chunks found to vectorize. Exiting.")
