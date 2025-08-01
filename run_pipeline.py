@@ -75,6 +75,9 @@ if __name__ == "__main__":
 	# service docker start
 	# minikube start --driver=docker
 	# kubectl port-forward service/minio-service 9000:9000
+	# export AWS_ENDPOINT_URL=http://127.0.0.1:9000
+	# mc alias set myminio http://127.0.0.1:9000 minio minio123
+	# mc mb myminio/zenml
 	# zenml pipeline run run_pipeline.data_ingestion_pipeline
 	data_ingestion_pipeline_instance = data_ingestion_pipeline()
 	logging.info("Pipeline definition loaded. To run, use ZenML CLI.")
