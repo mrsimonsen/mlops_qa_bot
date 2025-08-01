@@ -1,6 +1,3 @@
-#don't for get to update the requirements.txt
-#pip-compile requirements.in
-
 # Web Scraping & Parsing
 beautifulsoup4
 requests
@@ -20,6 +17,10 @@ zenml[server]
 mlflow
 docker
 dvc
+
+# Kubeflow Integration
+kfp
+kfp-kubernetes
 
 # Cloud & Infrastructure
 boto3
