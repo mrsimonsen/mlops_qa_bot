@@ -218,6 +218,3 @@ __marimo__/
 mlruns/
 mlflow.db
 
-/scrapped_data
-/processed_data
-/chroma_db
