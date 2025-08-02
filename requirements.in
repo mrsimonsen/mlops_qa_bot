@@ -1,6 +1,6 @@
 # Web Scraping & Parsing
-beautifulsoup4
-requests
+trafilatura
+GitPython
 
 # API & Servicing
 fastapi
