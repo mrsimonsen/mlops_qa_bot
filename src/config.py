@@ -7,4 +7,6 @@ SCRAPED_DATA_DIR = DATA_DIR / "scrapped_data"
 PROCESSED_DATA_DIR = DATA_DIR / "processed_data"
 DB_DIR = DATA_DIR / "chroma_db"
 URLS_FILE = DATA_DIR / "urls_to_scrape.txt"
+CLONED_REPOS_DIR = DATA_DIR / "cloned_repos"
+
 LOGGING_LEVEL = logging.INFO

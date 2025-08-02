@@ -1,156 +1,122 @@
 import os
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
-import time
-import re
+import git
+import trafilatura
+from urllib.parse import urlparse
 import logging
+import re
 from typing import Set, Tuple, Annotated
-from .config import SCRAPED_DATA_DIR, REQUEST_DELAY
+from .config import SCRAPED_DATA_DIR, CLONED_REPOS_DIR
 
 # --- Helper Functions ---
-def sanitize_filename(domain: str) -> str:
+def sanitize_filename(url: str) -> str:
 	"""
-	Creates a safe and clean filename from a domain name.
-	Example: 'docs.zenml.io' > 'docs_zenml_io.txt'
+	Creates a safe and clean filename a URL.
+	Example: 'https://github.com/zenml-io/zenml' > 'zenml-io_zenml.txt'
 
 	ARGS:
-		domain: str, URL text
+		url: str, URL text
 	RETURNS:
 		filename: str, sanitized URL into a filename
 	"""
-	#replace dots with underscores
-	sanitized = domain.replace('.','_')
+	# use the path component of the url for a more descriptive name
+	path = urlparse(url).path
+	# remove leading/trailing slashes and replace internal slashes with underscores
+	sanitized = path.strip('.').replace('/', '_')
 	#remove characters that are not alphanumeric or underscores
 	sanitized = re.sub(r'[^a-zA-Z0-9_]', '', sanitized)
 	return f'{sanitized}.txt'
 
 
-def is_valid_url(url: str, base_domain: str) -> bool:
+def is_doc_file(filepath: str) -> bool:
 	"""
-	Checks if a URL is valid and belongs to the same domain as the base URL.
+	Checks if a file has a documentation-related extension.
 
 	ARGS:
-		url: str, the URL to check
-		base_domain: str, the base URL to establish the domain
+		filepath: str, the path to the file
 	RETURNS:
-		is_valid: bool, True if the full URL is valid and a part of the base_domain
+		is_doc: bool, True if the file has a doc-related extension
 	"""
-	parsed_url = urlparse(url)
-	#allow for www. subdomain matching
-	return (
-		bool(parsed_url.scheme) and
-		bool(parsed_url.netloc) and
-		(parsed_url.netloc == base_domain or parsed_url.netloc == f'www.{base_domain}')
-		)
+	return filepath.lower().endswith(('.md', '.mdx', '.rst', '.html'))
 
 # --- Main Logic ---
 
-
-def scrape_page(
-    url: str, session: requests.Session, base_domain: str
-) -> Annotated[Tuple[str, Set[str]], "page_text_and_links"]:
+def extract_text_from_file(filepath: str) ->str:
 	"""
-	Scrapes a single page, extracts the main text content, and finds all valid links.
+	Extracts text from a single file using trafilatura.
 
 	ARGS:
-		url: str, the page to be scraped
-		session: request.Session, session object for making HTML requests
-		base_domain: str, the base domain to keep from leaving the site
+		filepath: str, the path to the file
 	RETURNS:
-		text: str, the text content of the scraped page
-		links: set, the links found from the page that are in the base_domain
+		text: str, the extracted text content of the file
 	"""
 	try:
-		response = session.get(url, timeout=10)
-		response.raise_for_status()
-	
-		#skip this page if no text
-		if 'text/html' not in response.headers.get('Content-Type', ''):
-			return '', set()
-		
-		soup = BeautifulSoup(response.content, 'html.parser')
-		
-		main_content = soup.find('main') or soup.find('article') or soup.find('div', role='main')
-		if main_content:
-			text = main_content.get_text(separator='\n', strip=True)
-		elif soup.body:
-			text = soup.body.get_text(separator='\n', strip=True)
-		else:
-			logging.warning(f"No body tag found for {url}. Skipping.")
-			return '', set()
+		with open(filepath, 'r') as f:
+			content = f.read()
+		# use trafilatura to extract the main text from the file's content
+		text = trafilatura.extract(content, include_comments=False, include_tables=False)
+		return text or ''
+	except Exception as e:
+		logging.error(f"Error extracting text from {filepath}: {e}")
+		return ''
 
-		links = set()
-		for a_tag in soup.find_all('a', href=True):
-			href = a_tag['href'] # type: ignore
-			full_url = urljoin(url, href) # type: ignore
-			full_url = full_url.split('#')[0].split('?')[0]
-
-			if is_valid_url(full_url, base_domain):
-				links.add(full_url)
-		return text, links
-	except requests.exceptions.RequestException as e:
-		logging.error(f'Error scraping {url}: {e}')
-		return '', set()
-
-def crawl_site(base_url: str, session: requests.Session, output_file: str) -> None:
+def process_cloned_repo(repo_path: str, base_url: str, output_file: str) -> None:
 	"""
-	Orchestrates the scraping process for a single base URL, saving to a specific file.
+	Processed a cloned repository, extracts text from documentation files,
+	and saves it to a single output file.
 	
 	ARGS:
-		base_url: str, the base URL for the site to be scraped
-		session: requests.Session, session object for making HTML requests
-		output_file: str, a filepath to save the scrapped data
+		repo_path: str, the local path to the cloned repository
+		base_url: str, the original URL of the repository for context
+		output_file: str, a filepath to save the scaped data
 	"""
-	base_domain = urlparse(base_url).netloc
-	to_visit = {base_url}
-	visited = set()
+	logging.info(f"Processing repository for: {base_url}\nOutput will be saved to: {output_file}")
 
-	logging.info(f"Starting crawl for: {base_url}/nOutput saved to: {output_file}")
-
-	#clear output_file before starting crawl
 	with open(output_file, 'w') as f:
 		f.write(f"--- Scraped content from {base_url} ---\n")
+
+	for root, _, files in os.walk(repo_path):
+		for file in files:
+			if is_doc_file(file):
+				file_path = os.path.join(root, file)
+				logging.info(f"\tProcessing: {file_path}")
+				text = extract_text_from_file(file_path)
+				if text:
+					with open(output_file, 'a') as f:
+						relative_path = os.path.relpath(file_path, repo_path)
+						f.write(f"\n\n--- Page: {base_url}/blob/main/{relative_path} ---\n\n")
+						f.write(text)
 	
-	while to_visit:
-		current_url = to_visit.pop()
-		# don't scrape the same page twice
-		if current_url in visited:
-			continue
-		
-		logging.info(f"\tScraping: {current_url}")
-		visited.add(current_url)
+	logging.info(f"Finished processing repository for {base_url}.")
 
-		text, new_links = scrape_page(current_url, session, base_domain)
-
-		if text:
-			with open(output_file, 'a') as f:
-				f.write(f"\n\n--- Page: {current_url} ---\n\n")
-				f.write(text)
-		
-		to_visit.update(new_links - visited)
-		time.sleep(REQUEST_DELAY)
-
-	logging.info(f"Finished crawling {base_url}. Visited {len(visited)} pages.")
-
-
-def scrape_single_url(base_url: str) -> Annotated[str, "scraped_file_path"]:
+def scrape_single_repo(repo_url: str) -> Annotated[str, "scraped_file_path"]:
 	"""
-	Main entry point to scrape a single base URL and save it to a file.
-	
+	Main entry point to clone a single GitHub repository and extract its documentation.
+
 	ARGS:
-		base_url: str, the URL to scrape and crawl.
+		repo_url: str, the URL of the GitHub repository to clone.
 	RETURNS:
-		output_filepath: str, the path to the text file the contains the scraped
-		  content.
+		filepath: str, the path to the text file that contains the scrapped content.
 	"""
 	os.makedirs(SCRAPED_DATA_DIR, exist_ok=True)
-	session = requests.Session()
-	session.headers.update( {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
+	os.makedirs(CLONED_REPOS_DIR, exist_ok=True)
 
-	domain = urlparse(base_url).netloc
-	output_filename = sanitize_filename(domain)
+	repo_name = urlparse(repo_url).path.split('/')[-1]
+	clone_path = os.path.join(CLONED_REPOS_DIR, repo_name)
+
+	try:
+		if not os.path.exists(clone_path):
+			logging.info(f"Cloning {repo_url} into {clone_path}")
+			git.Repo.clone_from(repo_url, clone_path)
+		else:
+			logging.info(f"Repository {repo_name} already cloned. Pulling latest changes.")
+			repo = git.Repo(clone_path)
+			repo.remotes.origin.pull()
+	except git.exc.GitCommandError as e:
+		logging.error(f"Error cloning or pulling repository {repo_url}: e")
+		return ""
+	
+	output_filename = sanitize_filename(repo_url)
 	output_filepath = os.path.join(SCRAPED_DATA_DIR, output_filename)
 
-	crawl_site(base_url, session, output_filepath)
+	process_cloned_repo(clone_path, repo_url, output_filepath)
 	return output_filepath
