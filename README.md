@@ -19,7 +19,7 @@ This stage focuses on creating and testing the core question-answering model on 
 **Phase 1: Foundation & Data Engineering (Local)**
 
 * **Task 1.1: Environment Setup**: Initialize a Git repository, set up a Python environment, and install Ollama for local LLM experimentation.
-* **Task 1.2: Documentation Scraping**: Write and execute scripts to scrape the official documentation for the MLOps tools that the bot will be an expert on. These tools include ZenML, MLflow, Docker, and others.
+* **Task 1.2: Documentation Scraping**: Write and execute scripts to clone the official documentation repositories for the MLOps tools that the bot will be an expert on. These tools include ZenML, MLflow, Docker, and others. The script will then use `trafilatura` to extract and clean the text content from the documentation files (e.g., Markdown, reStructuredText).
 * **Task 1.3: Data Processing and Chunking**: Clean the scraped text to remove irrelevant artifacts and then split it into smaller, more manageable chunks for processing.
 * **Task 1.4: Vectorization and Storage**: Convert the text chunks into numerical embeddings and store them in a local ChromaDB instance to create a vector database.
 
@@ -83,7 +83,6 @@ pip install -r requirements.txt
 ```
 
 3. Run the application:
-
 ```bash
 uvicorn main:app --reload
 ```
@@ -101,3 +100,5 @@ uvicorn main:app --reload
 * **Terraform**: An open-source infrastructure as code software tool.
 * **GitHub Actions**: A CI/CD platform that allows you to automate your build, test, and deployment pipeline.
 * **Pytest**: A testing framework for Python.
+* **GitPython**: A Python library to interact with Git repositories.
+* **Trafilatura**: A Python package for wep scraping and text extraction.
