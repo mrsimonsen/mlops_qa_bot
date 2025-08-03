@@ -3,8 +3,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import chromadb
 from sentence_transformers import SentenceTransformer
-from langchain.vectorstores import Chroma
-from langchain.llms import Ollama
+from langchain_chroma import Chroma
+from langchain_ollama import OllamaLLM
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 
@@ -50,7 +50,7 @@ try:
 
 	# initialize the llm
 	logging.info("Initializing the Ollama LLM")
-	llm = Ollama(model='llama3')
+	llm = OllamaLLM(model='llama3')
 
 	#define the prompt template
 	prompt_template = """

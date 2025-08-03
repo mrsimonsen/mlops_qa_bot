@@ -8,7 +8,8 @@ uvicorn
 
 # LLM, RAG & Vector Storage
 langchain
-langchain-community
+langchain-chroma
+langchain-ollama
 ollama
 sentence-transformers
 chromadb
