@@ -1,0 +1,1 @@
+uvicorn src.rag_app.main:app --reload
