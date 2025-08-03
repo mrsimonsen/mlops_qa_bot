@@ -2,8 +2,8 @@ import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
 
-from config import URLS_FILE, LOGGING_LEVEL
-from scraper.scraper import scrape_single_url
+from src.config import URLS_FILE, LOGGING_LEVEL
+from scraper.scraper import scrape_single_repo
 from parser.parser import parse_and_chunk_files
 from vectorizer.vectorizer import vectorize_and_store
 
@@ -31,7 +31,7 @@ def run_scraper(urls_to_scrape: List[str]) -> List[str]:
 	logging.info("--- Starting Scraper Step ---")
 	scraped_files = []
 	with ThreadPoolExecutor(max_workers=5) as executor:
-		future_to_url = {executor.submit(scrape_single_url, url): url for url in urls_to_scrape}
+		future_to_url = {executor.submit(scrape_single_repo, url): url for url in urls_to_scrape}
 		for future in as_completed(future_to_url):
 			url = future_to_url[future]
 			try:
