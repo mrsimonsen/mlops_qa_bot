@@ -1,4 +1,4 @@
-from config import PROCESSED_DATA_DIR, DB_DIR
+from src.config import PROCESSED_DATA_DIR, DB_DIR
 
 #a good, lightweight Sentence Transformer model for general purpose
 # we'll use to create embeddings
