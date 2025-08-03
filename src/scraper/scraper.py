@@ -21,9 +21,9 @@ def sanitize_filename(url: str) -> str:
 	# use the path component of the url for a more descriptive name
 	path = urlparse(url).path
 	# remove leading/trailing slashes and replace internal slashes with underscores
-	sanitized = path.strip('.').replace('/', '_')
+	sanitized = path.strip('/').replace('/', '_')
 	#remove characters that are not alphanumeric or underscores
-	sanitized = re.sub(r'[^a-zA-Z0-9_]', '', sanitized)
+	sanitized = re.sub(r'[^a-zA-Z0-9_-]', '', sanitized)
 	return f'{sanitized}.txt'
 
 
@@ -111,7 +111,7 @@ def scrape_single_repo(repo_url: str) -> Annotated[str, "scraped_file_path"]:
 			logging.info(f"Repository {repo_name} already cloned. Pulling latest changes.")
 			repo = git.Repo(clone_path)
 			repo.remotes.origin.pull()
-	except git.exc.GitCommandError as e:
+	except git.exc.GitCommandError as e: # type: ignore
 		logging.error(f"Error cloning or pulling repository {repo_url}: e")
 		return ""
 	

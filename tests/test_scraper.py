@@ -1,170 +1,193 @@
 import pytest
-from unittest.mock import patch, mock_open, MagicMock, ANY
-import requests
+from unittest.mock import patch, mock_open, MagicMock
+import git
+import os
 
 from scraper import scraper
-from scraper.config import SCRAPED_DATA_DIR
+from scraper.config import SCRAPED_DATA_DIR, CLONED_REPOS_DIR
 
-test_cases = [
-	("standard domain", "docs.zenml.io", "docs_zenml_io.txt"),
-	("special characters", "!@#$%^&*-=+:/<>,;?", ".txt"),
-	("empty string", "", ".txt"),
-	("all numbers", "123.45.67.89", "123_45_67_89.txt"),
-	("multiple dots", "test..domain.org", "test__domain_org.txt"),
-	("no dots", "localhost", "localhost.txt")
-]
+
+# --- Test for Helper Functions ---
+
 @pytest.mark.parametrize(
-	"test_id, domain_input, expected_output",
-	test_cases,
-	ids=[cases[0] for cases in test_cases]
+	"test_id, url_input, expected_output",
+	[
+		("standard_github_url", "https://github.com/zenml-io/zenml", "zenml-io_zenml.txt"),
+		("url_with_subdirectories", "https://gitub.com/a/b/c", "a_b_c.txt"),
+		("url_with_special_chars_in_path", "https://example.com/a!@$b", "ab.txt"),
+		("url_with_trailing_slash", "https://gituhb.com/user/repo/", "user_repo.txt"),
+		("url_with_no_path", "https://example.com", ".txt")
+	],
+	ids=lambda x: x[0] if isinstance(x, tuple) else None
 )
-def test_sanitize_filename(test_id, domain_input, expected_output):
+def test_sanitize_filename(test_id, url_input, expected_output):
 	"""
-	Tests the sanitize_filename function with various inputs.
-	Uses pytest.mark.parameterize to run the same test function
-	with different inputs and expected outputs.
+	Test the sanitize_filename function with various URL inputs.
+	The new implementation bases the filename on the URL's path.
 	"""
-	assert scraper.sanitize_filename(domain_input) == expected_output
+	assert scraper.sanitize_filename(url_input) == expected_output
 
-test_cases = [
-	("positive", "https://docs.example.com/path/page", "docs.example.com", True),
-	("different subdomain", "https://api.example.com/path/page", "docs.example.com", False),
-	("different domains", "https://another-site.com", "docs.example.com", False),
-	("relative url", "/path/page", "docs.example.com", False),
-	("url with www vs base_domain", "https://www.example.com", "example.com", True)
-]
 @pytest.mark.parametrize(
-	"test_id, url, base_domain, expected",
-	test_cases,
-	ids=[cases[0] for cases in test_cases]
+	"filepath, expected",
+	[
+		('doc.md', True),
+		('guide.mdx', True),
+		('readme.rst', True),
+		('index.html', True),
+		('photo.jpg', False),
+		('script.py', False),
+		('Dockerfile', False),
+		('UPPERCASE.MD', True)
+	]
 )
-def test_is_valid_url(test_id, url, base_domain, expected):
+def test_is_doc_file(filepath, expected):
 	"""
-	Tests the URL validation logic with various cases.
-	This test uses pytest.mark.parameterize to check multiple scenarios
-	efficiently without needing mocks.
+	Tests the is_doc_file function to correctly identify documentation files.
 	"""
-	assert scraper.is_valid_url(url, base_domain) == expected
+	assert scraper.is_doc_file(filepath) == expected
 
-@patch('requests.Session')
-def test_scrape_page_success(mock_session):
+
+# --- Tests for Core Logic ---
+
+@patch("trafilatura.extract")
+@patch("builtins.open", new_callable=mock_open, read_data='file content')
+def test_extract_text_from_file_success(mock_file, mock_trafilatura):
 	"""
-	Tests successful page scraping.
-	- Mocks the requests.Session to return a fake HTML response.
-	- Verifies that text is extracted correctly from the <main> tag.
-	- Verifies that only valid, on-domain links are returned.
+	Test successful extraction from a file using trafilatura.
 	"""
-	base_url = "https://test.com"
-	base_domain = "test.com"
-	html_content= """
-<html>
-	<body>
-		<header>Some awesome header</header>
-		<main>
-			<h1>Main Title</h1>
-			<p>This is the main content.</p>
-			<a href="/page2">Internal Link</a>
-			<a href="https://test.com/page3#section">Internal Link with fragment</a>
-			<a href="https://external.com">External Link</a>
-		</main>
-	</body>
-</html>
-"""
+	expected_result = "extracted text"
+	mock_trafilatura.return_value = expected_result
+	result = scraper.extract_text_from_file("dummy/path.md")
+	mock_file.assert_called_once_with("dummy/path.md", 'r')
+	mock_trafilatura.assert_called_once_with("file content", include_comments=False, include_tables=False)
+	assert result == expected_result
 
-	mock_response = MagicMock()
-	mock_response.content = html_content.encode('utf-8')
-	mock_response.headers = {'Content-Type': 'text/html'}
-	mock_response.raise_for_status.return_value = None
-
-	mock_session.get.return_value = mock_response
-	
-	text, links = scraper.scrape_page(base_url, mock_session, base_domain)
-
-	expected_text = "Main Title\nThis is the main content.\nInternal Link\nInternal Link with fragment\nExternal Link"
-	expected_links = {"https://test.com/page2", "https://test.com/page3"}
-
-	assert text.strip() == expected_text
-	assert links == expected_links
-	mock_session.get.assert_called_once_with(base_url, timeout=10)
-
-@patch('requests.Session')
-def test_scrape_page_request_error(mock_session, caplog):
+@patch("trafilatura.extract")
+@patch("builtins.open", new_callable=mock_open, read_data="file content")
+def test_extract_text_from_file_no_text(mock_file, mock_trafilatura):
 	"""
-	Tests how scrape_page handles a network error.
-	- Mocks the session's get method to raise a RequestException.
-	- Verifies that the function returns empty values and logs an error.
+	Tests the case where trafilatura returns None (no main text found).
 	"""
-	url = "https://test.com"
-	mock_session.get.side_effect = requests.exceptions.RequestException("Test Error")
+	mock_trafilatura.return_value = None
+	result = scraper.extract_text_from_file("dummy/path.md")
+	assert result == ''
 
-	text, links = scraper.scrape_page(url, mock_session, "test.com")
-
-	assert text == ""
-	assert links == set()
-	assert f'Error scraping {url}: Test Error' in caplog.text
-
-@patch('time.sleep', return_value=None)
-@patch('scraper.scraper.scrape_page')
-@patch('builtins.open', new_callable=mock_open)
-def test_crawl_site(mock_file, mock_scrape_page, mock_sleep, caplog):
+@patch("builtins.open", side_effect=IOError("File not found"))
+def test_extract_text_from_file_error(mock_file, caplog):
 	"""
-	Tests the complete crawling process for a single site.
-	- Mocks 'scrape_page' to simulate discovering new pages.
-	- Mocks 'builtin.open' to check file writing without touching disk.
-	- Mocks 'time.sleep' to prevent delays.
-	- Simulates a two-page crawl and verifies the calls and file content.
+	Tests error handling when a file cannot be opened.
 	"""
-	base_url = "https://crawler.test"
-	page2_url = "https://crawler.test/page2"
+	result = scraper.extract_text_from_file("nonexistent/path.md")
+	assert result == ''
+	assert "Error extracting text from nonexistent/path.md" in caplog.text
 
-	mock_scrape_page.side_effect = [
-		("Text from page 1.", {page2_url}),
-		("Text from page 2.", set())
+@patch("os.walk")
+@patch("scraper.scraper.is_doc_file")
+@patch("scraper.scraper.extract_text_from_file")
+@patch("builtins.open", new_callable=mock_open)
+def test_process_cloned_repo(mock_open_file, mock_extract, mock_is_doc, mock_walk):
+	"""
+	Tests the processing of a directory of files.
+	- Mocks os.walk to simulate a file structure.
+	- Mocks helper function to isolate the logic of this function.
+	- Verifies that the correct files are processed and written to the output.
+	"""
+	repo_path = '/tmp/repo'
+	base_url = 'https://github.com/test/repo'
+	output_file = '/temp/output.txt'
+
+	#Simulate a file structure
+	mock_walk.return_value = [
+		(repo_path, [], ["index.md", "image.png"]),
+		(f"{repo_path}/subdir", [], ['guide.rst', 'script.py'])
 	]
 
-	scraper.crawl_site(base_url, requests.Session(), "dummy_output.txt")
+	#Mock helpers to control which files are processed
+	mock_is_doc.side_effect = lambda f: f.endswith((".md", (".rst")))
+	mock_extract.side_effect = ['Text from index.', 'Text from guide.']
 
-	assert mock_scrape_page.call_count == 2
-	mock_scrape_page.assert_any_call(base_url, ANY, "crawler.test")
-	mock_scrape_page.assert_any_call(page2_url, ANY, "crawler.test")
+	scraper.process_cloned_repo(repo_path, base_url, output_file)
 
-	handle = mock_file()
-	handle.write.assert_any_call(f"--- Scraped content from {base_url} ---\n")
-	handle.write.assert_any_call(f"\n\n--- Page: {base_url} ---\n\n")
-	handle.write.assert_any_call(f"Text from page 1.")
-	handle.write.assert_any_call(f"\n\n--- Page: {page2_url} ---\n\n")
-	handle.write.assert_any_call(f"Text from page 2.")
-
-@patch('scraper.scraper.crawl_site')
-@patch('requests.Session')
-@patch('os.makedirs')
-def test_scrape_single_url(mock_makedirs, mock_session_constructor, mock_crawl_site):
-	"""
-	Tests the main entry point for scraping a single URL.
-	- Mocks dependencies to ensure they are called correctly.
-	- Verifies that craw_site is called with the expected URL and file path.
-	"""
-	#set up
-	base_url = "https://docs.test.com/some/path"
-	expected_output_path = f'{SCRAPED_DATA_DIR}/docs_test_com.txt'
+	#check that os.walk was called correctly
+	mock_walk.assert_called_once_with(repo_path)
 	
-	mock_session_instance = MagicMock()
-	mock_session_constructor.return_value = mock_session_instance
+	#check that extract_text_from_file was called fo the doc files only
+	assert mock_extract.call_count == 2
+	mock_extract.assert_any_call(os.path.join(repo_path, 'index.md'))
+	mock_extract.assert_any_call(os.path.join(repo_path, 'subdir', 'guide.rst'))
 
-	# execute
-	result_path = scraper.scrape_single_url(base_url)
+	#check file writing operations
+	handle = mock_open_file()
+	handle.write.assert_any_call(f"--- Scraped content from {base_url} ---\n")
+	handle.write.assert_any_call(f"\n\n--- Page: https://github.com/test/repo/blob/main/index.md ---\n\n")
+	handle.write.assert_any_call(f"Text from index.")
+	handle.write.assert_any_call(f"\n\n--- Page: https://github.com/test/repo/blob/main/subdir/guide.rst ---\n\n")
+	handle.write.assert_any_call(f"Text from guide.")
 
-	# assert
-	#verify output directory creation
-	mock_makedirs.assert_called_once_with(SCRAPED_DATA_DIR, exist_ok=True)
-	# verify session was created and headers updated
-	mock_session_constructor.assert_called_once()
-	mock_session_instance.headers.update.assert_called_once()
-	#verify that crawl_site() was called with correct args
-	mock_crawl_site.assert_called_once_with(
-		base_url,
-		mock_session_instance,
-		expected_output_path
-	)
-	#verify function returns correct output path
-	assert result_path == expected_output_path
+
+# --- Tests for Main Entry Point ---
+
+@patch("os.makedirs")
+@patch("os.path.exists", return_value=False)
+@patch("git.Repo.clone_from")
+@patch("scraper.scraper.process_cloned_repo")
+def test_scrape_single_repo_clone(mock_process, mock_clone, mock_exists, mock_makedirs):
+	"""
+	Tests the main function when the repository need to be cloned.
+	"""
+	repo_url = "https://github.com/test/new-repo"
+	expected_output_path = os.path.join(SCRAPED_DATA_DIR, 'test_new-repo.txt')
+	clone_path = os.path.join(CLONED_REPOS_DIR, 'new-repo')
+
+	result = scraper.scrape_single_repo(repo_url)
+
+	# verify directories are created
+	mock_makedirs.assert_any_call(SCRAPED_DATA_DIR, exist_ok=True)
+	mock_makedirs.assert_any_call(CLONED_REPOS_DIR, exist_ok=True)
+
+	# verify cloning and processing are called
+	mock_clone.assert_any_call(repo_url, clone_path)
+	mock_process.assert_called_once_with(clone_path, repo_url, expected_output_path)
+	assert result == expected_output_path
+
+	@patch("os.makedirs")
+	@patch("os.path.exists", return_value=True)
+	@patch("git.Repo")
+	@patch("scraper.scraper.process_cloned_repo")
+	def test_scrape_single_repo_pull(mock_process, mock_repo, mock_exists, mock_makedirs):
+		"""
+		Tests the main function when the repository already exists and should be pulled.
+		"""
+		repo_url = "https://github.com/test/existing.repo"
+		expected_output_path = os.path.join(SCRAPED_DATA_DIR, '_test_existing-repo.txt')
+		clone_path = os.path.join(CLONED_REPOS_DIR, 'existing-repo')
+
+		# mock repository object and its pull method
+		mock_repo_instance = MagicMock()
+		mock_repo.return_value = mock_repo_instance
+
+		result = scraper.scrape_single_repo(repo_url)
+
+		# verify it check for existence and initializes a Repo object
+		mock_exists.assert_called_once_with(clone_path)
+		mock_repo.assert_called_once_with(clone_path)
+
+		# verify pull is called
+		mock_repo_instance.remotes.origin.pull.assert_called_once()
+
+		# verify processing is called
+		mock_process.assert_called_once_with(clone_path, repo_url, expected_output_path)
+		assert result == expected_output_path
+
+@patch("os.makedirs")
+@patch("os.path.exists", return_value=False)
+@patch("git.Repo.clone_from", side_effect=git.exc.GitCommandError("clone", "error")) # type: ignore
+def test_scrape_single_repo_git_error(mock_clone, mock_exists, mock_makedirs, caplog):
+	"""
+	Test error handling during a git clone operation.
+	"""
+	repo_url = "https://github.com/test/fail-repo"
+	result = scraper.scrape_single_repo(repo_url)
+
+	assert "Error cloning or pulling repository" in caplog.text
+	assert result == ''
