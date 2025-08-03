@@ -1,8 +1,11 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
+import shutil
+import os
+import stat
 
-from src.config import URLS_FILE, LOGGING_LEVEL
+from src.config import URLS_FILE, LOGGING_LEVEL, CLONED_REPOS_DIR
 from src.scraper.scraper import scrape_single_repo
 from src.parser.parser import parse_and_chunk_files
 from src.vectorizer.vectorizer import vectorize_and_store
@@ -62,6 +65,34 @@ def run_vectorizer(processed_data_dir: str) -> None:
 	vectorize_and_store(processed_data_dir)
 	logging.info("--- Vectorizer Step Complete ---")
 
+def run_cleanup(directory_to_clean: str) -> None:
+	"""
+	Cleans up the specified directory by removing all its contents.
+	Handles read-only files that can be problematic in Git repositories.
+	"""
+	logging.info("--- Starting Cleanup Step ---")
+
+	def remove_readonly(func, path, excinfo):
+		"""
+		Error handler for shutil.rmtree that handles read-only files.
+		"""
+		if excinfo[1].errno == 13: #errno.EACCES (Permission denied)
+			os.chmod(path, stat.S_IWRITE)
+			func(path)
+		else:
+			raise
+
+	if os.path.exists(directory_to_clean):
+		try:
+			shutil.rmtree(directory_to_clean, onerror=remove_readonly)
+			logging.info(f"Successfully removed directory: {directory_to_clean}")
+		except Exception as e:
+			logging.error(f"Error during cleanup of {directory_to_clean}", exc_info=True)
+	else:
+		logging.info(f"Directory '{directory_to_clean}' does not exist, no cleanup needed.")
+	logging.info("--- Cleanup Step Complete")
+
+
 if __name__ == "__main__":
 	setup_logging()
 	logging.info("Starting data ingestion pipeline...")
@@ -76,5 +107,6 @@ if __name__ == "__main__":
 		else:
 			processed_dir = run_parser(scraped_paths)
 			run_vectorizer(processed_dir)
+			run_cleanup(str(CLONED_REPOS_DIR))
 			logging.info("Data ingestion pipeline has completed successfully.")
 	
