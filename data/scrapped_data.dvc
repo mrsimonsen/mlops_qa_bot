@@ -1,0 +1,6 @@
+outs:
+- md5: 23aa17d29f639f113d28e734a1cbdfb8.dir
+  size: 60501677
+  nfiles: 14
+  hash: md5
+  path: scrapped_data
