@@ -13,7 +13,7 @@ from scraper.config import SCRAPED_DATA_DIR, CLONED_REPOS_DIR
 	"test_id, url_input, expected_output",
 	[
 		("standard_github_url", "https://github.com/zenml-io/zenml", "zenml-io_zenml.txt"),
-		("url_with_subdirectories", "https://gitub.com/a/b/c", "a_b_c.txt"),
+		("url_with_subdirectories", "https://gitub.com/a/b/c", "a_b.txt"),
 		("url_with_special_chars_in_path", "https://example.com/a!@$b", "ab.txt"),
 		("url_with_trailing_slash", "https://gituhb.com/user/repo/", "user_repo.txt"),
 		("url_with_no_path", "https://example.com", ".txt")
@@ -136,8 +136,10 @@ def test_scrape_single_repo_clone(mock_process, mock_clone, mock_exists, mock_ma
 	Tests the main function when the repository need to be cloned.
 	"""
 	repo_url = "https://github.com/test/new-repo"
+	clone_url = repo_url + '.git'
+	repo_name_for_dir = "test_new-repo"
+	clone_path = os.path.join(CLONED_REPOS_DIR, repo_name_for_dir)
 	expected_output_path = os.path.join(SCRAPED_DATA_DIR, 'test_new-repo.txt')
-	clone_path = os.path.join(CLONED_REPOS_DIR, 'new-repo')
 
 	result = scraper.scrape_single_repo(repo_url)
 
@@ -146,38 +148,39 @@ def test_scrape_single_repo_clone(mock_process, mock_clone, mock_exists, mock_ma
 	mock_makedirs.assert_any_call(CLONED_REPOS_DIR, exist_ok=True)
 
 	# verify cloning and processing are called
-	mock_clone.assert_any_call(repo_url, clone_path)
+	mock_clone.assert_any_call(clone_url, clone_path)
 	mock_process.assert_called_once_with(clone_path, repo_url, expected_output_path)
 	assert result == expected_output_path
 
-	@patch("os.makedirs")
-	@patch("os.path.exists", return_value=True)
-	@patch("git.Repo")
-	@patch("scraper.scraper.process_cloned_repo")
-	def test_scrape_single_repo_pull(mock_process, mock_repo, mock_exists, mock_makedirs):
-		"""
-		Tests the main function when the repository already exists and should be pulled.
-		"""
-		repo_url = "https://github.com/test/existing.repo"
-		expected_output_path = os.path.join(SCRAPED_DATA_DIR, '_test_existing-repo.txt')
-		clone_path = os.path.join(CLONED_REPOS_DIR, 'existing-repo')
+@patch("os.makedirs")
+@patch("os.path.exists", return_value=True)
+@patch("git.Repo")
+@patch("scraper.scraper.process_cloned_repo")
+def test_scrape_single_repo_pull(mock_process, mock_repo, mock_exists, mock_makedirs):
+	"""
+	Tests the main function when the repository already exists and should be pulled.
+	"""
+	repo_url = "https://github.com/test/existing-repo"
+	repo_name_for_dir = "test_existing-repo"
+	clone_path = os.path.join(CLONED_REPOS_DIR, repo_name_for_dir)
+	expected_output_path = os.path.join(SCRAPED_DATA_DIR, 'test_existing-repo.txt')
 
-		# mock repository object and its pull method
-		mock_repo_instance = MagicMock()
-		mock_repo.return_value = mock_repo_instance
+	# mock repository object and its pull method
+	mock_repo_instance = MagicMock()
+	mock_repo.return_value = mock_repo_instance
 
-		result = scraper.scrape_single_repo(repo_url)
+	result = scraper.scrape_single_repo(repo_url)
 
-		# verify it check for existence and initializes a Repo object
-		mock_exists.assert_called_once_with(clone_path)
-		mock_repo.assert_called_once_with(clone_path)
+	# verify it check for existence and initializes a Repo object
+	mock_exists.assert_called_once_with(clone_path)
+	mock_repo.assert_called_once_with(clone_path)
 
-		# verify pull is called
-		mock_repo_instance.remotes.origin.pull.assert_called_once()
+	# verify pull is called
+	mock_repo_instance.remotes.origin.pull.assert_called_once()
 
-		# verify processing is called
-		mock_process.assert_called_once_with(clone_path, repo_url, expected_output_path)
-		assert result == expected_output_path
+	# verify processing is called
+	mock_process.assert_called_once_with(clone_path, repo_url, expected_output_path)
+	assert result == expected_output_path
 
 @patch("os.makedirs")
 @patch("os.path.exists", return_value=False)

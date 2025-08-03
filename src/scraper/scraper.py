@@ -4,37 +4,44 @@ import trafilatura
 from urllib.parse import urlparse
 import logging
 import re
-from typing import Set, Tuple, Annotated
+from typing import Annotated
 from .config import SCRAPED_DATA_DIR, CLONED_REPOS_DIR
 
 # --- Helper Functions ---
+
+def get_base_repo_url(url:str) -> str:
+	"""
+	Extracts the base repository URL, removing subdirectories and branches.
+	Example: 'https://github.com/zenml-io/zenml/tree/main/docs' -> 'https://github.com/zenml-io/zenml'
+	"""
+	parsed_url = urlparse(url)
+	path_parts = parsed_url.path.strip('/').split('/')
+	if len(path_parts) >= 2:
+		base_repo_path = f"/{path_parts[0]}/{path_parts[1]}"
+		return f"{parsed_url.scheme}://{parsed_url.netloc}{base_repo_path}"
+	return url # return original url if not in the expected format
+
+
 def sanitize_filename(url: str) -> str:
 	"""
-	Creates a safe and clean filename a URL.
+	Creates a safe and clean filename a URL based on its repo name.
 	Example: 'https://github.com/zenml-io/zenml' > 'zenml-io_zenml.txt'
-
-	ARGS:
-		url: str, URL text
-	RETURNS:
-		filename: str, sanitized URL into a filename
 	"""
 	# use the path component of the url for a more descriptive name
 	path = urlparse(url).path
-	# remove leading/trailing slashes and replace internal slashes with underscores
-	sanitized = path.strip('/').replace('/', '_')
-	#remove characters that are not alphanumeric or underscores
+	parts = path.strip('/').split('/')
+	# use the first two parts of the path for a unique name (e.g., user_repo)
+	if len(parts) >=2:
+		sanitized = f"{parts[0]}_{parts[1]}"
+	else:
+		sanitized = parts[-1] if parts else "unknown"
+	# clean up any remaining invalid characters
 	sanitized = re.sub(r'[^a-zA-Z0-9_-]', '', sanitized)
 	return f'{sanitized}.txt'
-
 
 def is_doc_file(filepath: str) -> bool:
 	"""
 	Checks if a file has a documentation-related extension.
-
-	ARGS:
-		filepath: str, the path to the file
-	RETURNS:
-		is_doc: bool, True if the file has a doc-related extension
 	"""
 	return filepath.lower().endswith(('.md', '.mdx', '.rst', '.html'))
 
@@ -43,11 +50,6 @@ def is_doc_file(filepath: str) -> bool:
 def extract_text_from_file(filepath: str) ->str:
 	"""
 	Extracts text from a single file using trafilatura.
-
-	ARGS:
-		filepath: str, the path to the file
-	RETURNS:
-		text: str, the extracted text content of the file
 	"""
 	try:
 		with open(filepath, 'r') as f:
@@ -78,12 +80,16 @@ def process_cloned_repo(repo_path: str, base_url: str, output_file: str) -> None
 		for file in files:
 			if is_doc_file(file):
 				file_path = os.path.join(root, file)
+				# exclude .git from processing
+				if ".git" in file_path:
+					continue
 				logging.info(f"\tProcessing: {file_path}")
 				text = extract_text_from_file(file_path)
 				if text:
 					with open(output_file, 'a') as f:
 						relative_path = os.path.relpath(file_path, repo_path)
-						f.write(f"\n\n--- Page: {base_url}/blob/main/{relative_path} ---\n\n")
+						original_repo_url = get_base_repo_url(base_url)
+						f.write(f"\n\n--- Page: {original_repo_url}/blob/main/{relative_path} ---\n\n")
 						f.write(text)
 	
 	logging.info(f"Finished processing repository for {base_url}.")
@@ -100,15 +106,17 @@ def scrape_single_repo(repo_url: str) -> Annotated[str, "scraped_file_path"]:
 	os.makedirs(SCRAPED_DATA_DIR, exist_ok=True)
 	os.makedirs(CLONED_REPOS_DIR, exist_ok=True)
 
-	repo_name = urlparse(repo_url).path.split('/')[-1]
-	clone_path = os.path.join(CLONED_REPOS_DIR, repo_name)
+	base_url = get_base_repo_url(repo_url)
+	clone_url = base_url + '.git'
+	repo_name_for_dir = sanitize_filename(base_url).replace('.txt','')
+	clone_path = os.path.join(CLONED_REPOS_DIR, repo_name_for_dir)
 
 	try:
 		if not os.path.exists(clone_path):
-			logging.info(f"Cloning {repo_url} into {clone_path}")
-			git.Repo.clone_from(repo_url, clone_path)
+			logging.info(f"Cloning {clone_url} into {clone_path}")
+			git.Repo.clone_from(clone_url, clone_path)
 		else:
-			logging.info(f"Repository {repo_name} already cloned. Pulling latest changes.")
+			logging.info(f"Repository {repo_name_for_dir} already cloned. Pulling latest changes.")
 			repo = git.Repo(clone_path)
 			repo.remotes.origin.pull()
 	except git.exc.GitCommandError as e: # type: ignore
