@@ -9,8 +9,31 @@ fi
 echo -e "\n--- Starting local MinIO instance for artifact storage ---"
 kubectl apply -f k8s/minio-deployment.yaml
 
+echo -e "\n--- Starting Ollama server container ---"
+if ! docker ps --filter "name=ollama" --filter "status=running" | grep -q "ollama"; then
+	echo "Ollama container not running. Starting it now in detached mode ..."
+	docker rm ollama >/dev/null 2>&1 || true
+	docker run -d \
+		-v ollama:/root/.ollama \
+		-p 11434:11434 \
+		--name ollama \
+		ollama/ollama
+else
+	echo "Ollama container is already running."
+fi
+
 echo -e "\n--- Building the FastAPI Docker image ---"
 docker build -t mlops_qa_bot .
 
-echo -e "\n--- Development environment setup is complete. ---\n--- Running Docker Container ---"
-docker run --rm -p 8000:8000 --name qa-bot-app mlops_qa_bot
+echo -e "\n--- Running Docker Container ---"
+if [ "$(docker ps -q -f name=qa-bot-app)" ]; then
+	echo "Stopping and removing existing qa-bot-app container..."
+	docker stop qa-bot-app
+fi
+docker run -d --rm \
+	-p 8000:8000 \
+	--name qa-bot-app \
+	mlops_qa_bot
+
+echo -e "\n--- Development environment setup is complete. ---"
+echo "Your Q&A bot is now running at http://localhost:8000"
