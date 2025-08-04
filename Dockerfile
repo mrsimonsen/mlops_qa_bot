@@ -6,5 +6,5 @@ RUN uv pip install --no-cache --system -r requirements.txt
 COPY ./src /app/src
 COPY ./data/chroma_db /app/data/chroma_db
 EXPOSE 8000
-ENV PYTHONPATH="${PYTHONPATH}:/app"
+ENV PYTHONPATH="/app/src"
 CMD [ "uvicorn", "src.rag_app.main:app", "--host", "0.0.0.0", "--port", "8000" ]
