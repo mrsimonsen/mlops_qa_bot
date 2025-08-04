@@ -8,8 +8,8 @@ from langchain_ollama import OllamaLLM
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 
-from src.config import DB_DIR
-from src.vectorizer.config import COLLECTION_NAME, EMBEDDING_MODEL_NAME
+from config import DB_DIR
+from vectorizer.config import COLLECTION_NAME, EMBEDDING_MODEL_NAME
 
 # --- Configuration & Setup ---
 logging.basicConfig(
@@ -42,7 +42,7 @@ try:
 	vector_store = Chroma(
 		client=client,
 		collection_name = COLLECTION_NAME,
-		embedding_function=embedding_function
+		embedding_function=embedding_function # type: ignore
 	)
 
 	# create retriever from vector store
@@ -104,5 +104,5 @@ def query_endpoint(query_request: QueryRequest):
 		raise HTTPException(status_code=500, detail="Failed to process the query.")
 	
 @app.get("/")
-def read_rood():
+def read_root():
 	return {"message": "MLOps Q&A Bot is running!"}
