@@ -26,7 +26,7 @@ def test_query_endpoint_success(mock_qa_chain):
 			type('obj', (object,), {'metadata': {'source': 'doc1.html'}})()
 		]
 	}
-	mock_qa_chain.return_value = mock_result
+	mock_qa_chain.invoke.return_value = mock_result
 
 	# make api request 
 	question = 'What is ZenML?'
@@ -39,7 +39,7 @@ def test_query_endpoint_success(mock_qa_chain):
 	assert response_data['source_documents'] == ['doc1.html']
 
 	# verify the mock was called correctly
-	mock_qa_chain.assert_called_once_with({'query': question})
+	mock_qa_chain.invoke.assert_called_once_with({'query': question})
 
 @patch('rag_app.main.qa_chain', None)
 def test_query_endpoint_chain_unavailable():

@@ -33,11 +33,10 @@ app = FastAPI()
 app.add_middleware(
 	CORSMiddleware,
 	allow_origins=[
-		# "https://mrsimonsen.net",
-		# "http://mrsimonsen.net",
-		# "https://www.mrsimonsen.net",
-		# "http://www.mrsimonsen.net"
-		'*'
+		"https://mrsimonsen.net",
+		"http://mrsimonsen.net",
+		"https://www.mrsimonsen.net",
+		"http://www.mrsimonsen.net"
 	],
 	allow_methods=["GET", "POST"],
 	allow_headers=["Content-Type"]
@@ -109,7 +108,7 @@ def query_endpoint(query_request: QueryRequest):
 	
 	try:
 		logging.info(f"Received query: {query_request.question}")
-		result = qa_chain({"query": query_request.question})
+		result = qa_chain.invoke({"query": query_request.question})
 
 		return{
 			"answer": result['result'],
