@@ -1,5 +1,6 @@
 import logging
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import chromadb
 from sentence_transformers import SentenceTransformer
@@ -27,6 +28,20 @@ class QueryResponse(BaseModel):
 
 # --- FastAPI Application ---
 app = FastAPI()
+
+# --- Add CORS middleware ---
+app.add_middleware(
+	CORSMiddleware,
+	allow_origins=[
+		"https://mrsimonsen.net",
+		"http://mrsimonsen.net",
+		"https://www.mrsimonsen.net",
+		"http://www.mrsimonsen.net"
+	],
+	allow_methods=["GET", "POST"],
+	allow_headers=["Content-Type"]
+	
+)
 
 # --- RAG Components ---
 try:
