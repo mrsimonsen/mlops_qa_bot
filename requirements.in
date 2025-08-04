@@ -8,6 +8,7 @@ uvicorn
 
 # LLM, RAG & Vector Storage
 langchain
+langchain-huggingface
 langchain-chroma
 langchain-ollama
 ollama

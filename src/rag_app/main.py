@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import chromadb
-from sentence_transformers import SentenceTransformer
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaLLM
 from langchain.prompts import PromptTemplate
@@ -33,10 +33,11 @@ app = FastAPI()
 app.add_middleware(
 	CORSMiddleware,
 	allow_origins=[
-		"https://mrsimonsen.net",
-		"http://mrsimonsen.net",
-		"https://www.mrsimonsen.net",
-		"http://www.mrsimonsen.net"
+		# "https://mrsimonsen.net",
+		# "http://mrsimonsen.net",
+		# "https://www.mrsimonsen.net",
+		# "http://www.mrsimonsen.net"
+		'*'
 	],
 	allow_methods=["GET", "POST"],
 	allow_headers=["Content-Type"]
@@ -51,13 +52,13 @@ try:
 
 	# initialize the embedding function
 	logging.info(f"Loading embedding model: {EMBEDDING_MODEL_NAME}")
-	embedding_function = SentenceTransformer(EMBEDDING_MODEL_NAME)
+	embedding_function = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
 
 	# create a LanChain vector store
 	vector_store = Chroma(
 		client=client,
 		collection_name = COLLECTION_NAME,
-		embedding_function=embedding_function # type: ignore
+		embedding_function=embedding_function
 	)
 
 	# create retriever from vector store
