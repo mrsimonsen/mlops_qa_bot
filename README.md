@@ -29,6 +29,9 @@ This stage focuses on creating and testing the core question-answering model on 
 * **Task 2.2: API Service with FastAPI**: Build a RESTful API with a `/query` endpoint using FastAPI to serve the model's answers.
 * **Task 2.3: Containerize the Application**: Write a Dockerfile to package the FastAPI application into a container, ensuring that it can be deployed consistently across different environments.
 * **Task 2.4: Unit & Integration Testing**: Use `pytest` to write and run tests that ensure the reliability and correctness of the application's components.
+* **Task 2.5: Simple Web Interface**:
+    * **Backend CORS Configuration**: Update the FastAPI application to include CORS (Cross-Origin Resource Sharing) middleware.
+    * **Frontend Integration**: Add an HTML and JavaScript-based user interface to an existing webpage (mrsimonsen.net) to send queries to the backend API and display results.
 
 ### Stage 2: MLOps Pipeline and Cloud Deployment
 
@@ -72,20 +75,20 @@ Once the model is working locally, this stage will focus on automating the data 
 
 1.  Clone the repository:
 
-```bash
-git clone [https://github.com/your-username/your-repository.git](https://github.com/your-username/your-repository.git)
-```
+    ```bash
+    git clone [https://github.com/mrsimonsen/mlops_qa_bot.git](https://github.com/mrsimonsen/mlops_qa_bot.git)
+    ```
 
-2. Install the required packages:
+2.  Install the required packages:
 
-```bash
-pip install -r requirements.txt
-```
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-3. Run the application:
-```bash
-uvicorn main:app --reload
-```
+`3.  Run the application:
+    ````bash
+    `uvicorn main:app --reload
+    ````
 
 ## Tech Stack
 
