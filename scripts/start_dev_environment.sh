@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "--- Checking Minikube status ---"
+echo -e "\n--- Checking Minikube status ---"
 if ! minikube status | grep -q "Running"; then
 	echo "Minikube not running. Starting it now..."
 	minikube start
@@ -8,6 +8,9 @@ fi
 
 echo -e "\n--- Starting local MinIO instance for artifact storage ---"
 kubectl apply -f k8s/minio-deployment.yaml
+
+echo "--- Setting adn verifying Minikube Docker environment ---"
+eval $(minikube -p minikube docker-env)
 
 echo -e "\n--- Starting Ollama server container ---"
 if ! docker ps --filter "name=ollama" --filter "status=running" | grep -q "ollama"; then
@@ -22,7 +25,7 @@ else
 	echo "Ollama container is already running."
 fi
 
-echo -e"\n--- Starting ZenML server ---"
+echo -e "\n--- Starting ZenML server ---"
 if ! zenml status | grep -q "ZenML Server is running"; then
 	echo "ZenML server not running. Starting it now..."
 	zenml login --local
