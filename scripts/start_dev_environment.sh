@@ -25,11 +25,10 @@ fi
 echo -e "\n--- Building the FastAPI Docker image ---"
 docker build -t mlops_qa_bot .
 
-echo -e "\n--- Running Docker Container ---"
-if [ "$(docker ps -q -f name=qa-bot-app)" ]; then
-	echo "Stopping and removing existing qa-bot-app container..."
-	docker stop qa-bot-app
-fi
+echo -e "\n--- Running FastAPI application container ---"
+echo "Ensuring no old 'qa-bot-app' container exists..."
+docker rm -f qa-bot-app >/dev/null 2>&1 || true
+echo "Starting new 'qa-bot-app' container..."
 docker run -d --rm \
 	-p 8000:8000 \
 	--name qa-bot-app \
