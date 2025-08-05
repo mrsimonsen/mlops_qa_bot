@@ -1,0 +1,11 @@
+# API & Servicing
+fastapi
+uvicorn[standard]
+
+# LLM, RAG & Vector Storage
+langchain
+langchain-huggingface
+langchain-chroma
+langchain-ollama
+sentence-transformers
+chromadb

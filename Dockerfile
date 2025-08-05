@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 WORKDIR /app
 RUN pip install uv
-COPY ./requirements.txt /app/requirements.txt
+COPY ./requirements.app.txt /app/requirements.txt
 RUN uv pip install --no-cache --system -r requirements.txt
 COPY ./src /app/src
 COPY ./data/chroma_db /app/data/chroma_db
