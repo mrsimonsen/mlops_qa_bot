@@ -22,6 +22,14 @@ else
 	echo "Ollama container is already running."
 fi
 
+echo -e"\n--- Starting ZenML server ---"
+if ! zenml status | grep -q "ZenML Server is running"; then
+	echo "ZenML server not running. Starting it now..."
+	zenml login --local
+else
+	echo "ZenML server is already running."
+fi
+
 echo -e "\n--- Building the FastAPI Docker image ---"
 docker build -t mlops_qa_bot .
 
