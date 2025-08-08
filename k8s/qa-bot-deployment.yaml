@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qa-bot-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qa-bot-app
+  template:
+    metadata:
+      labels:
+        app: qa-bot-app
+    spec:
+      containers:
+      - name: qa-bot-app
+        image: mlops_qa_bot:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qa-bot-service
+spec:
+  selector:
+    app: qa-bot-app
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000

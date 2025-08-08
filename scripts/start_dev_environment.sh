@@ -2,14 +2,17 @@
 
 echo -e "\n--- Checking Minikube status ---"
 if ! minikube status | grep -q "Running"; then
-	echo "Minikube not running. Starting it now..."
+	echo "Starting Minikube..."
 	minikube start
+else
+ echo "Minikube is already running."
 fi
 
-echo -e "\n--- Starting local MinIO instance for artifact storage ---"
+echo -e "\n---Starting local MinIO instance for artifact storage ---"
 kubectl apply -f k8s/minio-deployment.yaml
 
-echo "--- Setting adn verifying Minikube Docker environment ---"
+
+echo "--- Setting and verifying Minikube Docker environment ---"
 eval $(minikube -p minikube docker-env)
 
 echo -e "\n--- Starting Ollama server container ---"
@@ -36,14 +39,9 @@ fi
 echo -e "\n--- Building the FastAPI Docker image ---"
 docker build -t mlops_qa_bot .
 
-echo -e "\n--- Running FastAPI application container ---"
-echo "Ensuring no old 'qa-bot-app' container exists..."
-docker rm -f qa-bot-app >/dev/null 2>&1 || true
-echo "Starting new 'qa-bot-app' container..."
-docker run -d --rm \
-	-p 8000:8000 \
-	--name qa-bot-app \
-	mlops_qa_bot
+echo -e "\n--- Deploying FastAPI application to Kubernetes ---"
+kubectl apply -f k8s/qa-bot-deployment.yaml
 
-echo -e "\n--- Development environment setup is complete. ---"
-echo "Your Q&A bot is now running at http://localhost:8000"
+echo -e "\n--- Forwarding service port to localhost ---"
+echo "You can now access your application at the URL printed below."
+minikube service qa-bot-service
