@@ -6,6 +6,7 @@ https://github.com/docker/docs
 https://github.com/hashicorp/terraform-provider-aws/tree/main/website/docs
 https://github.com/iterative/dvc.org/tree/main/content/docs
 https://github.com/langchain-ai/langchain/tree/master/docs/docs
+https://github.com/langchain-ai/langsmith-docs/tree/main/docs
 https://github.com/ollama/ollama/tree/main/docs
 https://github.com/chroma-core/chroma/tree/main/docs
 https://github.com/git/git/tree/master/Documentation

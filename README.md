@@ -2,7 +2,7 @@
 
 ## Project Description
 
-This project is a question-answering bot that specializes in MLOps tools. The bot is designed to answer questions about a variety of MLOps tools, including ZenML, MLflow, and Docker. The project is broken down into two main stages: first, building and containerizing the model locally, and second, creating an MLOps pipeline to automate the deployment of the model to a production environment on AWS.
+This project is a question-answering bot that specializes in MLOps tools. The bot is designed to answer questions about a variety of MLOps tools, including ZenML, MLflow, LangSmith, and Docker. The project is broken down into two main stages: first, building and containerizing the model locally, and second, creating an MLOps pipeline to automate the deployment of the model to a production environment on AWS.
 
 ## Project Goal
 
@@ -37,12 +37,15 @@ This stage focuses on creating and testing the core question-answering model on 
 
 Once the model is working locally, this stage will focus on automating the data pipeline and deploying the application to a production environment on the cloud.
 
-**Phase 3: MLOps Orchestration with Kubeflow (Local)**
+**Phase 3: MLOps Orchestration with Kubeflow and LangSmith (Local)**
 
 * **Task 3.1: Local Kubernetes Setup**: Install and configure a local Kubernetes cluster using Docker Desktop or Minikube to simulate a production environment.
 * **Task 3.2: ZenML Kubeflow Stack**: Install the ZenML Kubeflow integration and configure a new ZenML stack that uses the local Kubeflow instance as its orchestrator.
 * **Task 3.3: ZenML Pipeline Execution**: Run the data ingestion pipeline on the Kubeflow stack, which will execute the pipeline's steps as pods within the local Kubernetes cluster.
-* **Task 3.4: MLflow Integration**: Log pipeline parameters and evaluation metrics to MLflow to track experiments and monitor performance.
+* **Task 3.4: LangSmith and MLflow Integration**:
+    * **LLM Evaluation with LangSmith**: Instrument the pipeline to send traces to LangSmith for debugging and evaluation. Use LangSmith's evaluation suite to measure metrics like correctness, relevance, and toxicity.
+    * **Experiment Tracking with MLflow**: Log pipeline parameters, artifacts, and LangSmith evaluation metrics to MLflow to track experiments and monitor performance over time.
+* **Task 3.5: Production Monitoring with LangSmith**: Implement tracing in the production FastAPI application to send real-time data to LangSmith for monitoring latency, cost, and response quality.
 
 **Phase 4: Cloud Infrastructure as Code (IaC) with EKS**
 
@@ -85,10 +88,11 @@ Once the model is working locally, this stage will focus on automating the data 
     pip install -r requirements.txt
     ```
 
-`3.  Run the application:
-    ````bash
-    `uvicorn main:app --reload
-    ````
+3.  Run the application:
+
+    ```bash
+    uvicorn main:app --reload
+    ```
 
 ## Tech Stack
 
@@ -97,6 +101,7 @@ Once the model is working locally, this stage will focus on automating the data 
 * **Docker**: A platform for developing, shipping, and running applications in containers.
 * **ChromaDB**: An open-source embedding database for building AI applications.
 * **ZenML**: An extensible, open-source MLOps framework for creating portable, production-ready MLOps pipelines.
+* **LangSmith**: An observability and evaluation platform for LLM applications.
 * **MLflow**: An open-source platform for managing the end-to-end machine learning lifecycle.
 * **Kubeflow**: A machine learning toolkit for Kubernetes.
 * **AWS**: Amazon Web Services, a cloud computing platform.
@@ -104,4 +109,4 @@ Once the model is working locally, this stage will focus on automating the data 
 * **GitHub Actions**: A CI/CD platform that allows you to automate your build, test, and deployment pipeline.
 * **Pytest**: A testing framework for Python.
 * **GitPython**: A Python library to interact with Git repositories.
-* **Trafilatura**: A Python package for wep scraping and text extraction.
+* **Trafilatura**: A Python package for web scraping and text extraction.
