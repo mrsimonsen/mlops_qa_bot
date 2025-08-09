@@ -18,7 +18,7 @@ venv/
 mlruns/
 zenml_stores/
 
-# Ignore the data directory by default...
-data/*
-# ...but explicitly include the chroma_db needed for the app
-!data/chroma_db/
+#Data
+data/processed_data
+data/scrapped_data
+data/cloned_repos

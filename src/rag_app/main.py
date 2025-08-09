@@ -36,7 +36,9 @@ app.add_middleware(
 		"https://mrsimonsen.net",
 		"http://mrsimonsen.net",
 		"https://www.mrsimonsen.net",
-		"http://www.mrsimonsen.net"
+		"http://www.mrsimonsen.net",
+		"http://localhost",
+		"null"
 	],
 	allow_methods=["GET", "POST"],
 	allow_headers=["Content-Type"]
@@ -65,7 +67,7 @@ try:
 
 	# initialize the llm
 	logging.info("Initializing the Ollama LLM")
-	llm = OllamaLLM(model='llama3')
+	llm = OllamaLLM(model='llama3', base_url='http://host.docker.internal:11434')
 
 	#define the prompt template
 	prompt_template = """
