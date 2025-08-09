@@ -67,7 +67,7 @@ try:
 
 	# initialize the llm
 	logging.info("Initializing the Ollama LLM")
-	llm = OllamaLLM(model='llama3', base_url='http://host.docker.internal:11434')
+	llm = OllamaLLM(model='llama3', base_url='http://ollama-service:11434')
 
 	#define the prompt template
 	prompt_template = """

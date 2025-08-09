@@ -22,19 +22,6 @@ kubectl apply -f k8s/minio-deployment.yaml
 echo "--- Setting and verifying Minikube Docker environment ---"
 eval $(minikube -p minikube docker-env)
 
-echo -e "\n--- Starting Ollama server container ---"
-if ! docker ps --filter "name=ollama" --filter "status=running" | grep -q "ollama"; then
-	echo "Ollama container not running. Starting it now in detached mode ..."
-	docker rm ollama >/dev/null 2>&1 || true
-	docker run -d \
-		-v ollama:/root/.ollama \
-		-p 11434:11434 \
-		--name ollama \
-		ollama/ollama
-else
-	echo "Ollama container is already running."
-fi
-
 echo -e "\n--- Starting ZenML server ---"
 if ! zenml status | grep -q "ZenML Server is running"; then
 	echo "ZenML server not running. Starting it now..."
@@ -42,6 +29,12 @@ if ! zenml status | grep -q "ZenML Server is running"; then
 else
 	echo "ZenML server is already running."
 fi
+
+echo -e "\n--- Building the custom Ollama Docker image ---"
+docker build -t ollama-custom -f ollama.Dockerfile .
+
+echo -e "\n--- Starting Ollama server ---"
+kubectl apply -f k8s/ollama-deployment.yaml
 
 echo -e "\n--- Building the FastAPI Docker image ---"
 docker build -t mlops_qa_bot .
