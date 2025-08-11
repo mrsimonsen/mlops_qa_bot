@@ -2,111 +2,113 @@
 
 ## Project Description
 
-This project is a question-answering bot that specializes in MLOps tools. The bot is designed to answer questions about a variety of MLOps tools, including ZenML, MLflow, LangSmith, and Docker. The project is broken down into two main stages: first, building and containerizing the model locally, and second, creating an MLOps pipeline to automate the deployment of the model to a production environment on AWS.
+This project is a question-answering bot that specializes in MLOps tools. The bot is designed to answer questions about a variety of MLOps tools by using a Retrieval-Augmented Generation (RAG) approach with a local Large Language Model (LLM).
+
+The project is broken down into two main stages. The first stage focuses on building and containerizing the model locally. The second stage focuses on creating the configuration and workflows for cloud deployment without actually deploying the resources, resulting in a "deployment-ready" application and a complete blueprint for automation.
 
 ## Project Goal
 
-The primary goal of this project is to build a reliable and scalable question-answering bot that can be used to quickly find information about MLOps tools. This project will also serve as a practical example of how to build and deploy a machine learning model using modern MLOps practices.
+The primary goal of this project is to build a reliable and containerized question-answering bot. This project serves as a practical example of how to develop a modern machine learning application and prepare it for deployment using Infrastructure as Code (IaC) and CI/CD planning.
 
 ## Project Plan
 
 The project is divided into the following stages and phases:
 
-### Stage 1: Model Development and Local Implementation
+### Stage 1: Model Development and Final Containerization
 
-This stage focuses on creating and testing the core question-answering model on a local machine.
+*This stage focuses on the hands-on development of the application, from data ingestion to creating a shareable, containerized final product.*
 
 **Phase 1: Foundation & Data Engineering (Local)**
+- **Task 1.1: Environment Setup**: Initialize a Git repository, set up a Python environment, and install Ollama for local LLM experimentation.
+- **Task 1.2: Documentation Scraping**: Write and execute scripts to clone the official documentation repositories for the MLOps tools that the bot will be an expert on.
+- **Task 1.3: Data Processing and Chunking**: Clean the scraped text to remove irrelevant artifacts and then split it into smaller, more manageable chunks for processing.
+- **Task 1.4: Vectorization and Storage**: Convert the text chunks into numerical embeddings and store them in a local ChromaDB instance to create a vector database.
 
-* **Task 1.1: Environment Setup**: Initialize a Git repository, set up a Python environment, and install Ollama for local LLM experimentation.
-* **Task 1.2: Documentation Scraping**: Write and execute scripts to clone the official documentation repositories for the MLOps tools that the bot will be an expert on. These tools include ZenML, MLflow, Docker, and others. The script will then use `trafilatura` to extract and clean the text content from the documentation files (e.g., Markdown, reStructuredText).
-* **Task 1.3: Data Processing and Chunking**: Clean the scraped text to remove irrelevant artifacts and then split it into smaller, more manageable chunks for processing.
-* **Task 1.4: Vectorization and Storage**: Convert the text chunks into numerical embeddings and store them in a local ChromaDB instance to create a vector database.
+**Phase 2: RAG Application Development & Packaging**
+- **Task 2.1: Core RAG Logic**: Develop the core Retrieval-Augmented Generation (RAG) logic, including the retriever that fetches relevant context from the vector database and the generator that creates answers.
+- **Task 2.2: API Service with FastAPI**: Build a RESTful API with a `/query` endpoint using FastAPI to serve the model's answers.
+- **Task 2.3: Containerize the Application**: Write a Dockerfile to package the FastAPI application into a container, ensuring that it can be deployed consistently across different environments.
+- **Task 2.4: Unit & Integration Testing**: Use `pytest` to write and run tests that ensure the reliability and correctness of the application's components.
+- **Task 2.5: Push Container to Docker Hub**: Create a public repository on Docker Hub and push the container image, making the application easily shareable and verifiable.
+- **Task 2.6: Simple Web Interface**:
+    - **Backend CORS Configuration**: Update the FastAPI application to include CORS (Cross-Origin Resource Sharing) middleware.
+    - **Frontend Integration**: Add an HTML and JavaScript-based user interface to an existing webpage (mrsimonsen.net) to send queries to the backend API and display results.
 
-**Phase 2: RAG Application Development (Local)**
+### Stage 2: Deployment and Automation Planning
 
-* **Task 2.1: Core RAG Logic**: Develop the core Retrieval-Augmented Generation (RAG) logic, including the retriever that fetches relevant context from the vector database and the generator that creates answers.
-* **Task 2.2: API Service with FastAPI**: Build a RESTful API with a `/query` endpoint using FastAPI to serve the model's answers.
-* **Task 2.3: Containerize the Application**: Write a Dockerfile to package the FastAPI application into a container, ensuring that it can be deployed consistently across different environments.
-* **Task 2.4: Unit & Integration Testing**: Use `pytest` to write and run tests that ensure the reliability and correctness of the application's components.
-* **Task 2.5: Simple Web Interface**:
-    * **Backend CORS Configuration**: Update the FastAPI application to include CORS (Cross-Origin Resource Sharing) middleware.
-    * **Frontend Integration**: Add an HTML and JavaScript-based user interface to an existing webpage (mrsimonsen.net) to send queries to the backend API and display results.
+*This stage focuses on creating the configuration and workflows for cloud deployment without actually provisioning costly resources. The output is a complete, documented blueprint for automation.*
 
-### Stage 2: MLOps Pipeline and Cloud Deployment
+**Phase 3: Infrastructure and Automation Definition**
+- **Task 3.1: Infrastructure as Code Definition with Terraform**:
+    - Write Terraform configuration files (`.tf`) to define the AWS infrastructure needed for deployment (EKS cluster, ECR repository, S3 bucket, IAM roles).
+    - Validate the configuration by running `terraform init` and `terraform plan` to review the execution plan.
+    - **Note**: `terraform apply` will not be run to avoid incurring costs.
 
-Once the model is working locally, this stage will focus on automating the data pipeline and deploying the application to a production environment on the cloud.
+- **Task 3.2: CI/CD Workflow Creation with GitHub Actions**:
+    - Create a complete CI/CD workflow file at `.github/workflows/main.yml`.
+    - **Implement the CI Portion**: Configure the workflow to trigger on pushes to the `main` branch to automatically run the `pytest` suite and build the Docker image.
+    - **Define (but comment out) the CD Portion**: Write the deployment steps within the workflow file as a template for future deployment, including pushing the image to a container registry and applying a Kubernetes manifest.
 
-**Phase 3: MLOps Orchestration with Kubeflow and LangSmith (Local)**
+## Tech Stack
 
-* **Task 3.1: Local Kubernetes Setup**: Install and configure a local Kubernetes cluster using Docker Desktop or Minikube to simulate a production environment.
-* **Task 3.2: ZenML Kubeflow Stack**: Install the ZenML Kubeflow integration and configure a new ZenML stack that uses the local Kubeflow instance as its orchestrator.
-* **Task 3.3: ZenML Pipeline Execution**: Run the data ingestion pipeline on the Kubeflow stack, which will execute the pipeline's steps as pods within the local Kubernetes cluster.
-* **Task 3.4: LangSmith and MLflow Integration**:
-    * **LLM Evaluation with LangSmith**: Instrument the pipeline to send traces to LangSmith for debugging and evaluation. Use LangSmith's evaluation suite to measure metrics like correctness, relevance, and toxicity.
-    * **Experiment Tracking with MLflow**: Log pipeline parameters, artifacts, and LangSmith evaluation metrics to MLflow to track experiments and monitor performance over time.
-* **Task 3.5: Production Monitoring with LangSmith**: Implement tracing in the production FastAPI application to send real-time data to LangSmith for monitoring latency, cost, and response quality.
+### Core Technologies
 
-**Phase 4: Cloud Infrastructure as Code (IaC) with EKS**
+This project is built using the following core technologies:
 
-* **Task 4.1: Terraform Scripts for AWS**: Write Terraform configuration files to define and provision the necessary cloud infrastructure on AWS, including:
-    * An Amazon EKS (Elastic Kubernetes Service) cluster to serve as the production environment.
-    * An ECR (Elastic Container Registry) to host the production Docker image.
-    * An S3 bucket to store the production vector database and other artifacts.
-    * IAM roles and security groups to ensure secure communication between the different services.
-* **Task 4.2: Provision Infrastructure**: Run `terraform apply` to create the cloud resources defined in the scripts.
+* **Python**: The core programming language for the project.
+* **FastAPI**: A modern, high-performance web framework for building APIs.
+* **Docker**: A platform for developing, shipping, and running applications in containers.
+* **ChromaDB**: An open-source embedding database for building AI applications.
+* **LangChain**: A framework for developing applications powered by language models.
+* **Ollama**: A tool for running large language models locally.
+* **DVC**: A tool for data versioning.
+* **Terraform**: An open-source infrastructure as code software tool.
+* **GitHub Actions**: A CI/CD platform for automating build, test, and deployment pipelines.
+* **Pytest**: A testing framework for Python.
 
-**Phase 5: Continuous Integration & Deployment (CI/CD) to EKS**
+### Knowledge Base
 
-* **Task 5.1: GitHub Actions Workflow**: Create a CI/CD workflow using GitHub Actions by defining the necessary steps in a `.github/workflows/main.yml` file.
-* **Task 5.2: CI - Automated Testing & Building**: Configure the workflow to:
-    * Run the `pytest` suite automatically on every push to the main branch.
-    * Build the Docker image and push it to the AWS ECR repository upon successful testing.
-* **Task 5.3: CD - Automated Deployment to EKS**:
-    * Store AWS credentials and EKS cluster details as secrets in GitHub to allow the workflow to access the cloud environment securely.
-    * Use `kubectl` to apply a Kubernetes deployment manifest, which will instruct the EKS cluster to pull the new image from ECR and deploy it as a pod.
+The bot's knowledge is derived from the official documentation of the following MLOps and cloud-native technologies:
+
+* AWS (Boto3)
+* ChromaDB
+* DVC
+* Docker
+* FastAPI
+* Git
+* GitHub Actions
+* Kubeflow
+* Kubernetes
+* LangChain
+* LangSmith
+* MLflow
+* Ollama
+* Terraform
+* ZenML
 
 ## Getting Started
 
 ### Prerequisites
 
-* Python 3.8+
-* Docker
-* Git
+- Python 3.8+
+- Docker
+- Git
 
 ### Installation
 
 1.  Clone the repository:
-
     ```bash
     git clone [https://github.com/mrsimonsen/mlops_qa_bot.git](https://github.com/mrsimonsen/mlops_qa_bot.git)
     ```
-
-2.  Install the required packages:
-
+2.  Navigate to the project directory:
+    ```bash
+    cd mlops_qa_bot
+    ```
+3.  Install the required packages:
     ```bash
     pip install -r requirements.txt
     ```
-
-3.  Run the application:
-
+4.  Run the application:
     ```bash
-    uvicorn main:app --reload
+    uvicorn src.main:app --reload
     ```
-
-## Tech Stack
-
-* **Python**: The core programming language for the project.
-* **FastAPI**: A modern, fast (high-performance), web framework for building APIs with Python 3.8+ based on standard Python type hints.
-* **Docker**: A platform for developing, shipping, and running applications in containers.
-* **ChromaDB**: An open-source embedding database for building AI applications.
-* **ZenML**: An extensible, open-source MLOps framework for creating portable, production-ready MLOps pipelines.
-* **LangSmith**: An observability and evaluation platform for LLM applications.
-* **MLflow**: An open-source platform for managing the end-to-end machine learning lifecycle.
-* **Kubeflow**: A machine learning toolkit for Kubernetes.
-* **AWS**: Amazon Web Services, a cloud computing platform.
-* **Terraform**: An open-source infrastructure as code software tool.
-* **GitHub Actions**: A CI/CD platform that allows you to automate your build, test, and deployment pipeline.
-* **Pytest**: A testing framework for Python.
-* **GitPython**: A Python library to interact with Git repositories.
-* **Trafilatura**: A Python package for web scraping and text extraction.
