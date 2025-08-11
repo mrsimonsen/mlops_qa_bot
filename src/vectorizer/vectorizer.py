@@ -18,6 +18,7 @@ def read_chunks_from_file(filepath: str) -> List[str]:
 def vectorize_and_store(processed_data_dir: str):
 	"""
 	Main function to vectorize processed data and store it in ChromaDB.
+	This version processes data in batches to avoid exceeding ChromaDB's limits.
 
 	ARGS:
 		processed_data_dir: str, the directory containing the chunked text files.
@@ -51,15 +52,23 @@ def vectorize_and_store(processed_data_dir: str):
 		return
 
 	#4. Generate embeddings in batches (more efficient)
-	embeddings = model.encode(all_chunks, show_progress_bar=True)
+	batch_size = 4000
+	for i in range(0, len(all_chunks), batch_size):
+		end_i = min(i + batch_size, len(all_chunks))
 
-	#5. Add to ChromaDB collection
-	collection.add(
-		embeddings=embeddings.tolist(),
-		documents=all_chunks,
-		metadatas=all_metadata,
-		ids=all_ids
-	)
+		batch_chunks = all_chunks[i: end_i]
+		batch_embeddings = model.encode(batch_chunks, show_progress_bar=True)
+		batch_metadatas = all_metadata[i:end_i]
+		batch_ids = all_ids[i:end_i]
+
+		logging.info(f"Adding batch {i//batch_size + 1} with {len(batch_chunks)} documents to ChromaDB.")
+		#5. add the batch to the collection
+		collection.add(
+		embeddings=batch_embeddings.tolist(),
+		documents=batch_chunks,
+		metadatas=batch_metadatas,
+		ids=batch_ids
+		)
 
 	logging.info(f"Successfully vectorized and stored {len(all_chunks)} documents in collection '{COLLECTION_NAME}")
 	logging.info(f"Vector database persisted at: {DB_DIR}")
