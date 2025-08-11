@@ -10,7 +10,7 @@ from langchain_ollama import OllamaLLM
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 
-from config import DB_DIR, COLLECTION_NAME, EMBEDDING_MODEL_NAME
+from src.config import DB_DIR, COLLECTION_NAME, EMBEDDING_MODEL_NAME
 
 # --- Configuration & Setup ---
 logging.basicConfig(

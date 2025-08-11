@@ -3,8 +3,8 @@ from unittest.mock import patch, mock_open, MagicMock
 import git
 import os
 
-from scraper import scraper
-from scraper.config import SCRAPED_DATA_DIR, CLONED_REPOS_DIR
+from src.scraper import scraper
+from src.config import SCRAPED_DATA_DIR, CLONED_REPOS_DIR
 
 
 # --- Test for Helper Functions ---
@@ -82,8 +82,8 @@ def test_extract_text_from_file_error(mock_file, caplog):
 	assert "Error extracting text from nonexistent/path.md" in caplog.text
 
 @patch("os.walk")
-@patch("scraper.scraper.is_doc_file")
-@patch("scraper.scraper.extract_text_from_file")
+@patch("src.scraper.scraper.is_doc_file")
+@patch("src.scraper.scraper.extract_text_from_file")
 @patch("builtins.open", new_callable=mock_open)
 def test_process_cloned_repo(mock_open_file, mock_extract, mock_is_doc, mock_walk):
 	"""
@@ -130,7 +130,7 @@ def test_process_cloned_repo(mock_open_file, mock_extract, mock_is_doc, mock_wal
 @patch("os.makedirs")
 @patch("os.path.exists", return_value=False)
 @patch("git.Repo.clone_from")
-@patch("scraper.scraper.process_cloned_repo")
+@patch("src.scraper.scraper.process_cloned_repo")
 def test_scrape_single_repo_clone(mock_process, mock_clone, mock_exists, mock_makedirs):
 	"""
 	Tests the main function when the repository need to be cloned.
@@ -155,7 +155,7 @@ def test_scrape_single_repo_clone(mock_process, mock_clone, mock_exists, mock_ma
 @patch("os.makedirs")
 @patch("os.path.exists", return_value=True)
 @patch("git.Repo")
-@patch("scraper.scraper.process_cloned_repo")
+@patch("src.scraper.scraper.process_cloned_repo")
 def test_scrape_single_repo_pull(mock_process, mock_repo, mock_exists, mock_makedirs):
 	"""
 	Tests the main function when the repository already exists and should be pulled.

@@ -2,8 +2,8 @@ import pytest
 import numpy as np
 from unittest.mock import mock_open, patch, MagicMock
 
-from vectorizer import vectorizer
-from vectorizer.config import EMBEDDING_MODEL_NAME, DB_DIR, COLLECTION_NAME
+import src.vectorizer.vectorizer as vectorizer
+from src.config import EMBEDDING_MODEL_NAME, DB_DIR, COLLECTION_NAME
 
 test_cases = [
 	(
@@ -46,11 +46,11 @@ def test_read_chunks_from_file(test_id, file_content, expected_output):
 		assert result == expected_output
 		mock_file.assert_called_once_with("dummy_path.txt", 'r')
 
-@patch('vectorizer.vectorizer.os')
-@patch('vectorizer.vectorizer.logging')
-@patch('vectorizer.vectorizer.chromadb')
-@patch('vectorizer.vectorizer.SentenceTransformer')
-@patch('vectorizer.vectorizer.read_chunks_from_file')
+@patch('src.vectorizer.vectorizer.os')
+@patch('src.vectorizer.vectorizer.logging')
+@patch('src.vectorizer.vectorizer.chromadb')
+@patch('src.vectorizer.vectorizer.SentenceTransformer')
+@patch('src.vectorizer.vectorizer.read_chunks_from_file')
 def test_vectorize_and_store(mock_read_chunks, mock_sentence_transformer, mock_chromadb, mock_logging, mock_os, tmp_path):
 	test_db_path = str(tmp_path / "test_chroma_db")
 
@@ -69,7 +69,7 @@ def test_vectorize_and_store(mock_read_chunks, mock_sentence_transformer, mock_c
 	mock_client.get_or_create_collection.return_value = mock_collection
 	mock_chromadb.PersistentClient.return_value = mock_client
 
-	with patch('vectorizer.vectorizer.DB_DIR', test_db_path):
+	with patch('src.vectorizer.vectorizer.DB_DIR', test_db_path):
 		vectorizer.vectorize_and_store('processed_data')
 
 	mock_os.listdir.assert_called_once_with("processed_data")
@@ -85,10 +85,10 @@ def test_vectorize_and_store(mock_read_chunks, mock_sentence_transformer, mock_c
 		ids=['test_file.txt-0', 'test_file.txt-1']
 	)
 
-@patch('vectorizer.vectorizer.os')
-@patch('vectorizer.vectorizer.logging')
-@patch('vectorizer.vectorizer.read_chunks_from_file')
-@patch('vectorizer.vectorizer.SentenceTransformer')
+@patch('src.vectorizer.vectorizer.os')
+@patch('src.vectorizer.vectorizer.logging')
+@patch('src.vectorizer.vectorizer.read_chunks_from_file')
+@patch('src.vectorizer.vectorizer.SentenceTransformer')
 def test_vectorize_and_store_no_chunks(mock_sentence_transformer, mock_read_chunks, mock_logging, mock_os, tmp_path):
 	"""
 	Tests that vectorize_and_store handles the case where no chunks are found.
@@ -98,7 +98,7 @@ def test_vectorize_and_store_no_chunks(mock_sentence_transformer, mock_read_chun
 	mock_os.path.isfile.return_value = True
 	mock_read_chunks.return_value = [] # No chunks
 
-	with patch("vectorizer.vectorizer.DB_DIR", test_db_path):
+	with patch("src.vectorizer.vectorizer.DB_DIR", test_db_path):
 		vectorizer.vectorize_and_store('processed_data')
 
 	mock_logging.warning.assert_called_with("No chunks found to vectorize. Exiting.")

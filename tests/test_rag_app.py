@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 from unittest.mock import patch
 import pytest
 
-from rag_app.main import app
+from src.rag_app.main import app
 client = TestClient(app)
 
 def test_read_root():
@@ -13,7 +13,7 @@ def test_read_root():
 	assert response.status_code == 200
 	assert response.json() == {"message": "MLOps Q&A Bot is running!"}
 
-@patch('rag_app.main.qa_chain')
+@patch('src.rag_app.main.qa_chain')
 def test_query_endpoint_success(mock_qa_chain):
 	"""
 	Test the /query endpoint for a successful response.
@@ -41,7 +41,7 @@ def test_query_endpoint_success(mock_qa_chain):
 	# verify the mock was called correctly
 	mock_qa_chain.invoke.assert_called_once_with({'query': question})
 
-@patch('rag_app.main.qa_chain', None)
+@patch('src.rag_app.main.qa_chain', None)
 def test_query_endpoint_chain_unavailable():
 	"""
 	Tests the /query endpoint for the case where the RAG chain fails to initialize.

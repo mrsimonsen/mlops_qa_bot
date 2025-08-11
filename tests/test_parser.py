@@ -2,11 +2,11 @@ import pytest
 import os
 from unittest.mock import patch, mock_open
 
-from parser import parser
-from parser.config import PROCESSED_DATA_DIR
+from src.parser import parser
+from src.config import PROCESSED_DATA_DIR
 
-@patch('parser.parser.RecursiveCharacterTextSplitter')
-@patch('parser.parser.logging')
+@patch('src.parser.parser.RecursiveCharacterTextSplitter')
+@patch('src.parser.parser.logging')
 def test_process_and_chunk_file_success(mock_logging, mock_text_splitter):
 	"""
 	Tests successful processing of a file using the mocked text splitter.
@@ -18,7 +18,7 @@ def test_process_and_chunk_file_success(mock_logging, mock_text_splitter):
 	mock_splitter_instance = mock_text_splitter.return_value
 	mock_splitter_instance.split_text.return_value = expected_chunks
 
-	with patch('parser.parser.open', mock_open(read_data=file_content)) as mock_file:
+	with patch('src.parser.parser.open', mock_open(read_data=file_content)) as mock_file:
 		result_chunks = parser.process_and_chunk_file(test_filepath)
 
 		mock_file.assert_called_once_with(test_filepath, 'r')
@@ -27,8 +27,8 @@ def test_process_and_chunk_file_success(mock_logging, mock_text_splitter):
 		assert result_chunks == expected_chunks
 		mock_logging.error.assert_not_called()
 
-@patch('parser.parser.open')
-@patch('parser.parser.logging')
+@patch('src.parser.parser.open')
+@patch('src.parser.parser.logging')
 def test_process_and_chunk_file_file_not_found(mock_logging, mock_open_func):
 	"""
 	Tests the function's error handling when a FileNotFoundError occurs.
@@ -45,9 +45,9 @@ def test_process_and_chunk_file_file_not_found(mock_logging, mock_open_func):
 	mock_logging.error.assert_called_once_with(f"Error processing file {test_filepath}: {error_message}")
 
 
-@patch('parser.parser.logging')
-@patch('parser.parser.open', new_callable=mock_open)
-@patch('parser.parser.process_and_chunk_file')
+@patch('src.parser.parser.logging')
+@patch('src.parser.parser.open', new_callable=mock_open)
+@patch('src.parser.parser.process_and_chunk_file')
 @patch('os.path.basename')
 @patch('os.path.exists')
 @patch('os.makedirs')
