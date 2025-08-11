@@ -1,3 +1,4 @@
+import os
 import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,8 +10,7 @@ from langchain_ollama import OllamaLLM
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 
-from config import DB_DIR
-from vectorizer.config import COLLECTION_NAME, EMBEDDING_MODEL_NAME
+from config import DB_DIR, COLLECTION_NAME, EMBEDDING_MODEL_NAME
 
 # --- Configuration & Setup ---
 logging.basicConfig(
@@ -67,7 +67,8 @@ try:
 
 	# initialize the llm
 	logging.info("Initializing the Ollama LLM")
-	llm = OllamaLLM(model='llama3', base_url='http://ollama-service:11434')
+	ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://ollama-service:11434")
+	llm = OllamaLLM(model='llama3', base_url=ollama_base_url)
 
 	#define the prompt template
 	prompt_template = """

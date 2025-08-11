@@ -3,7 +3,7 @@ import logging
 import chromadb
 from sentence_transformers import SentenceTransformer
 from typing import List
-from .config import EMBEDDING_MODEL_NAME, DB_DIR, COLLECTION_NAME
+from src.config import EMBEDDING_MODEL_NAME, DB_DIR, COLLECTION_NAME
 
 def read_chunks_from_file(filepath: str) -> List[str]:
 	"""

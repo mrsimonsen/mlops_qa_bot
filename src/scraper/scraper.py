@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 import logging
 import re
 from typing import Annotated
-from .config import SCRAPED_DATA_DIR, CLONED_REPOS_DIR
+from src.config import SCRAPED_DATA_DIR, CLONED_REPOS_DIR
 
 # --- Helper Functions ---
 

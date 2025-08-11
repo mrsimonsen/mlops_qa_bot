@@ -3,7 +3,7 @@ import logging
 from typing import List
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from .config import PROCESSED_DATA_DIR, CHUNK_SIZE, CHUNK_OVERLAP
+from src.config import PROCESSED_DATA_DIR, CHUNK_SIZE, CHUNK_OVERLAP
 
 # --- Main Logic ---
 def process_and_chunk_file(filepath: str) -> List[str]:
