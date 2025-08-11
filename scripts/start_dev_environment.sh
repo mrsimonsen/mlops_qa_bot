@@ -18,17 +18,8 @@ echo "Default service account is ready."
 echo -e "\n---Starting local MinIO instance for artifact storage ---"
 kubectl apply -f k8s/minio-deployment.yaml
 
-
 echo "--- Setting and verifying Minikube Docker environment ---"
 eval $(minikube -p minikube docker-env)
-
-echo -e "\n--- Starting ZenML server ---"
-if ! zenml status | grep -q "ZenML Server is running"; then
-	echo "ZenML server not running. Starting it now..."
-	zenml login --local
-else
-	echo "ZenML server is already running."
-fi
 
 echo -e "\n--- Building the custom Ollama Docker image ---"
 docker build -t ollama-custom -f ollama.Dockerfile .

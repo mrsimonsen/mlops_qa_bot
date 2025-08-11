@@ -15,20 +15,8 @@ ollama
 sentence-transformers
 chromadb
 
-# MLOps & Orchestration
-zenml[server]
-mlflow
-docker
+# Data Versioning
 dvc
-
-# Kubeflow Integration
-kfp
-kfp-kubernetes
-
-# Cloud & Infrastructure
-boto3
-aws-profile-manager
-s3fs
 
 # Utilities
 python-dotenv
