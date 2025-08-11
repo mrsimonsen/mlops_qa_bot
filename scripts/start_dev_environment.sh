@@ -2,8 +2,8 @@
 
 echo -e "\n--- Checking Minikube status ---"
 if ! minikube status | grep -q "Running"; then
-	echo "Starting Minikube..."
-	minikube start
+	echo "Starting Minikube with 8GB of memory..."
+	minikube start --memory 8192
 else
  echo "Minikube is already running."
 fi
@@ -45,4 +45,4 @@ kubectl apply -f k8s/qa-bot-deployment.yaml
 echo -e "\n--- Forwarding service port to localhost ---"
 kubectl wait --for=condition=ready pod -l app=qa-bot-app --timeout=120s
 echo "You can now access your application at the URL printed below."
-minikube service qa-bot-service
+minikube service qa-bot-service --url &
