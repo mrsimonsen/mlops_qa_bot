@@ -29,7 +29,7 @@ The project is divided into the following stages and phases:
 - **Task 2.2: API Service with FastAPI**: Build a RESTful API with a `/query` endpoint using FastAPI to serve the model's answers.
 - **Task 2.3: Containerize the Application**: Write a Dockerfile to package the FastAPI application into a container, ensuring that it can be deployed consistently across different environments.
 - **Task 2.4: Unit & Integration Testing**: Use `pytest` to write and run tests that ensure the reliability and correctness of the application's components.
-- **Task 2.5: Push Container to Docker Hub**: Create a public repository on Docker Hub and push the container image, making the application easily shareable and verifiable.
+- **Task 2.5: Push Container to GitHub Container Registry**: Tag the built Docker image and push it to the registry, making the application easily sharable and verifiable.
 - **Task 2.6: Simple Web Interface**:
     - **Backend CORS Configuration**: Update the FastAPI application to include CORS (Cross-Origin Resource Sharing) middleware.
     - **Frontend Integration**: Add an HTML and JavaScript-based user interface to an existing webpage (mrsimonsen.net) to send queries to the backend API and display results.
