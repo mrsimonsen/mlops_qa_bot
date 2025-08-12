@@ -12,6 +12,10 @@ spec:
       labels:
         app: qa-bot-app
     spec:
+      initContainers:
+      - name: wait-for-ollama
+        image: busybox:1.28
+        command: ['sh', '-c', 'until nc -z ollama-service 11434; do echo "Waiting for ollama-service"; sleep 2; done;']
       containers:
       - name: qa-bot-app
         image: mlops_qa_bot:latest
