@@ -15,9 +15,6 @@ until kubectl get sa default &> /dev/null; do
 done
 echo "Default service account is ready."
 
-echo -e "\n---Starting local MinIO instance for artifact storage ---"
-kubectl apply -f k8s/minio-deployment.yaml
-
 echo "--- Setting and verifying Minikube Docker environment ---"
 eval $(minikube -p minikube docker-env)
 
