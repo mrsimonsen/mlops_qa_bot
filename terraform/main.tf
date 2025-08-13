@@ -21,9 +21,9 @@ resource "aws_s3_bucket" "artifacts" {
 # ----------------------------------
 # EKS cluster role, assumed by EKS control plane.
 resource "aws_iam_role" "eks_cluster_role" {
-	name = "${var,eks_cluster_name}-cluster-role"
+	name = "${var.eks_cluster_name}-cluster-role"
 
-	assume_role_policy = jsonencode){
+	assume_role_policy = jsonencode({
 		Version = "2012-10-17",
 		Statement = [
 			{
@@ -34,7 +34,7 @@ resource "aws_iam_role" "eks_cluster_role" {
 				Action = "sts:AssumeRole"
 			}
 		]
-	}
+	})
 }
 
 # attach the AmazonEKSClusterPolicy to the cluster role
@@ -62,13 +62,18 @@ resource "aws_iam_role" "eks_node_role" {
 }
 
 # Attach policies for worker node.
-resource "aws_iam_role_policy_attachment", "eks_worker_node_policy" {
+resource "aws_iam_role_policy_attachment" "eks_worker_node_policy" {
 	policy_arn = "arn:aws:iam::aws:policy/AmazonEksWorkerNodePolicy"
 	role = aws_iam_role.eks_node_role.name
 }
 
 resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
 	policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+	role = aws_iam_role.eks_node_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "ecr_read_only_policy" {
+	policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 	role = aws_iam_role.eks_node_role.name
 }
 
