@@ -212,9 +212,5 @@ __marimo__/
 #DVC tracked data
 .dvc/cache
 .dvc/tmp
-#ZenML local store
-/zenml_stores
-#MLflow files
-mlruns/
-mlflow.db
-
+#Terraform
+.terraform/
